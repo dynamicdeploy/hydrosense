@@ -15,10 +15,14 @@ namespace HydroSense
             double tolerance = 0.015;
             double[][] deltaQ = new double[m.Q.Length][];
             double[][] deltaOFdeltaQ = new double[m.Q.Length][];
+            InitializeArrayToZero(deltaQ, m.Q);
+            InitializeArrayToZero(deltaOFdeltaQ, m.Q);
+            int numNodes = m.Q.Length * m.Q[0].Length;
+            
 
-            Console.WriteLine("Initial Guess = " + m.Q.ToArray().ToString());
+            //Console.WriteLine("Initial Guess = " + m.Q.ToArray().ToString());
             double OF = ObjectiveFunction(m.supplyNodes, m.demandNodes, m.linkCosts, m.linkLosses, m.Q);
-            Console.WriteLine("Qbjective Function = " + OF + ": Quantity = " + m.Q.ToArray().ToString());
+            //Console.WriteLine("Qbjective Function = " + OF + ": Quantity = " + m.Q.ToArray().ToString());
             
             
             // Perform iterative colculations using a while loop construction
@@ -33,21 +37,21 @@ namespace HydroSense
             {
                 // Compute the numerical derivates for the Objective Function with
                 // respect to each decision variable:
-                // The Objective Function is the integral of the marginal demand
-                // functions from zero to the Quantity provided at each demand node minus
-                // the integral of the marginal cost functions from zero to the Quantity
-                // provided from supply node j to demand node i
-                // The DVs are the array of quantity from supply node j to
-                // demand node i
-                int numNodes = m.Q.Length * m.Q[0].Length;
-                for (int i = 0; i < numNodes; i++)
+                //   The Objective Function is the integral of the marginal demand
+                //   functions from zero to the Quantity provided at each demand node minus
+                //   the integral of the marginal cost functions from zero to the Quantity
+                //   provided from supply node j to demand node i. The DVs are the array 
+                //   of quantity from supply node j to demand node i
+                int counter = 0;
+                while (counter < numNodes - 1)
                 {
-
+                    counter++;
                 }
             }
 
 
         }
+
 
         private double ObjectiveFunction(Node supplyNodes, Node demandNodes, LinkCost linkCosts, LinkLoss linkLosses, double[][] Q)
         {
@@ -88,6 +92,7 @@ namespace HydroSense
             return rval;
         }
 
+
         private double SumColumn(double[][] Q, int col)
         {
             double rval = 0.0;
@@ -96,6 +101,19 @@ namespace HydroSense
                 rval += Q[i][col];
             }
             return rval;
+        }
+
+
+        private void InitializeArrayToZero(double[][] deltaQ, double[][] pattern)
+        {
+            for (int i = 0; i < pattern.Length; i++)
+            {
+                deltaQ[i] = new double[pattern[i].Length];
+                for (int j = 0; j < pattern[i].Length; j++)
+                {
+                    deltaQ[i][j] = 0.0;
+                }
+            }
         }
     }
 }
