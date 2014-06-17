@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Hydro_ense
+namespace HydroSense
 {
     static class Program
     {
@@ -14,9 +11,15 @@ namespace Hydro_ense
         [STAThread]
         static void Main()
         {
+            ModelInput m = new ModelInput();
+            m.ReadHardcoded();
+
+            TracySolver solver = new TracySolver();
+            solver.Solve(m);
+            
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new MainForm());
         }
     }
 }
