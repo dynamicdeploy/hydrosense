@@ -9,17 +9,26 @@ namespace HydroSense
     {
         public static double CalculateCost(double[] quantities, double[] costs, double quantity)
         {
-            int k = 0;
-            for (int i = 0; i < quantities.Length; i++)
+            if (quantity < 0)
+                return 0.0;
+
+            int i = 0;
+            while (quantities[i] <= quantity && i < quantities.Length - 1)
             {
-                if (quantities[i] <= quantity)
-                {
-                    k += 1;
-                }
+                i++;
             }
 
-            double slope = (costs[k] - costs[k - 1]) / (quantities[k] - quantities[k - 1]);
-            return costs[k - 1] + (quantity - quantities[k - 1]) * slope;
+            // if first value in quantities is greater than quantity, use the
+            // first two quantities and costs. ASSUMES at least two values.
+            if (i == 0)
+                i++;
+
+            // don't divide by zero
+            if (quantities[i] == 0 && quantities[i - 1] == 0)
+                return 0.0;
+
+            double slope = (costs[i] - costs[i - 1]) / (quantities[i] - quantities[i - 1]);
+            return costs[i - 1] + (quantity - quantities[i - 1]) * slope;
         }
     }
 }
