@@ -3,13 +3,13 @@ using System.Linq;
 
 namespace HydroSense
 {
-    class Node
+    class Nodes
     {
         public double[][] x { get; set; }
         public double[][] y { get; set; }
         public double[][] yc { get; set; }
 
-        public Node(double[][] quantity, double[][] cost)
+        public Nodes(double[][] quantity, double[][] cost)
         {
             if (quantity.Length != cost.Length)
             {

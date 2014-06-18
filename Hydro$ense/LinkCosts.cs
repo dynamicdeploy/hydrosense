@@ -5,11 +5,11 @@ using System.Text;
 
 namespace HydroSense
 {
-    class LinkCost : Link
+    class LinkCosts : Links
     {
         public double[][][] yc { get; set; }
 
-        public LinkCost(double[][][] quantity, double[][][] value)
+        public LinkCosts(double[][][] quantity, double[][][] value)
             : base(quantity, value)
         {
             yc = new double[x.Length][][];

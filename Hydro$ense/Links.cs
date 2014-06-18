@@ -5,12 +5,12 @@ using System.Text;
 
 namespace HydroSense
 {
-    class Link
+    class Links
     {
         public double[][][] x { get; set; }
         public double[][][] y { get; set; }
 
-        public Link(double[][][] quantity, double[][][] value)
+        public Links(double[][][] quantity, double[][][] value)
         {
             x = quantity;
             y = value;

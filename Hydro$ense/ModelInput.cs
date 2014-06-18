@@ -10,10 +10,10 @@ namespace HydroSense
 {
     class ModelInput
     {
-        public Node supplyNodes { get; set; }
-        public Node demandNodes { get; set; }
-        public LinkCost linkCosts { get; set; }
-        public LinkLoss linkLosses { get; set; }
+        public Nodes supplyNodes { get; set; }
+        public Nodes demandNodes { get; set; }
+        public LinkCosts linkCosts { get; set; }
+        public LinkLosses linkLosses { get; set; }
         public double[][] Q { get; set; }
         
         public ModelInput()
@@ -41,11 +41,11 @@ namespace HydroSense
         {
         }
 
-        private void ReadLinksDataFromSheet(ISheet linkcost, Link linkPoints)
+        private void ReadLinksDataFromSheet(ISheet linkcost, Links linkPoints)
         {
         }
 
-        private void ReadNodesDataFromSheet(ISheet sheet, Node nodePoints)
+        private void ReadNodesDataFromSheet(ISheet sheet, Nodes nodePoints)
         {
             int rowCount = sheet.PhysicalNumberOfRows;
             double[][] x = new double[rowCount][];
@@ -72,7 +72,7 @@ namespace HydroSense
                     y[i][j] = rowy.GetCell(j).NumericCellValue;
                 }
             }
-            nodePoints = new Node(x, y);
+            nodePoints = new Nodes(x, y);
         }
 
         public void ReadHardcoded()
@@ -93,7 +93,7 @@ namespace HydroSense
             Xs[1] = new double[] { 0.0, 1000.0, 2500.0, 5000.0, 8000.0, 10000.0, 15000.0, 25000.0 };
             Ys[0] = new double[] { 3.0, 3.061, 3.122, 3.154, 3.234, 3.316, 3.664, 4.050, 4.946, 5.747 };
             Ys[1] = new double[] { 1.50, 1.546, 1.617, 1.743, 1.907, 2.025, 2.352, 3.176 };
-            supplyNodes = new Node(Xs, Ys);
+            supplyNodes = new Nodes(Xs, Ys);
 
             // marginal demand curves
             Xd = new double[3][];
@@ -104,7 +104,7 @@ namespace HydroSense
             Yd[0] = new double[] { 15.0, 12.782, 10.892, 8.232, 6.740, 4.518, 3.028, 1.361, 0.611 };
             Yd[1] = new double[] { 10.0, 8.607, 6.873, 5.353, 3.679, 2.231 };
             Yd[2] = new double[] { 25.0, 19.470, 15.163, 9.197, 5.578, 2.052, 0.755 };
-            demandNodes = new Node(Xd, Yd);
+            demandNodes = new Nodes(Xd, Yd);
 
             // transportation costs
             Xt = new double[3][][];
@@ -127,7 +127,7 @@ namespace HydroSense
             Yt[1][1] = new double[] { 100.0, 100.0 };
             Yt[2][0] = new double[] { 100.0, 100.0 };
             Yt[2][1] = new double[] { 1.3, 1.3 };
-            linkCosts = new LinkCost(Xt, Yt);
+            linkCosts = new LinkCosts(Xt, Yt);
 
             // transportation losses
             Xtl = new double[3][][];
@@ -150,7 +150,7 @@ namespace HydroSense
             Ytl[1][1] = new double[] { 0.0, 0.0 };
             Ytl[2][0] = new double[] { 0.0, 0.0 };
             Ytl[2][1] = new double[] { 0.0, 303.0, 1717.0, 3707.0, 6071.0, 11403.0, 14209.0 };
-            linkLosses = new LinkLoss(Xtl, Ytl);
+            linkLosses = new LinkLosses(Xtl, Ytl);
             
             // initial guess
             Q = new double[3][];

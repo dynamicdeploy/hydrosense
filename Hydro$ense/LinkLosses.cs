@@ -5,9 +5,9 @@ using System.Text;
 
 namespace HydroSense
 {
-    class LinkLoss : Link
+    class LinkLosses : Links
     {
-        public LinkLoss(double[][][] quantity, double[][][] value)
+        public LinkLosses(double[][][] quantity, double[][][] value)
             : base(quantity, value)
         {
 
