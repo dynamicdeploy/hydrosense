@@ -16,10 +16,12 @@ namespace HydroSense
 
             TracySolver solver = new TracySolver();
             solver.Solve(m);
-            
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+
+            Console.ReadKey();
+
+            //Application.EnableVisualStyles();
+            //Application.SetCompatibleTextRenderingDefault(false);
+            //Application.Run(new MainForm());
         }
     }
 }

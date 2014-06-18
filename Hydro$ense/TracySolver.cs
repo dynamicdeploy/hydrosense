@@ -13,17 +13,17 @@ namespace HydroSense
             double deltai = 0.005;
             double deltad = 0.01;
             double tolerance = 0.015;
-            double[][] quant = CopyArray(m.Q);
-            double[][] quantD = CopyArray(m.Q);
+            double[][] quant = Util.CopyArray(m.Q);
+            double[][] quantD = Util.CopyArray(m.Q);
             double[][] deltaQ = new double[m.Q.Length][];
             double[][] deltaOFdeltaQ = new double[m.Q.Length][];
-            InitializeArrayToZero(deltaQ, m.Q);
-            InitializeArrayToZero(deltaOFdeltaQ, m.Q);
+            Util.InitializeArrayToZero(deltaQ, m.Q);
+            Util.InitializeArrayToZero(deltaOFdeltaQ, m.Q);
 
 
-            //Console.WriteLine("Initial Guess = " + m.Q.ToArray().ToString());
+            Console.WriteLine("Initial Guess:");
+            Util.PrintArrayToConsole(quant);
             double OF = ObjectiveFunction(m, quant);
-            //Console.WriteLine("Qbjective Function = " + OF + ": Quantity = " + m.Q.ToArray().ToString());
 
 
             // Perform iterative colculations using a while loop construction
@@ -48,7 +48,7 @@ namespace HydroSense
                 {
                     for (int j = 0; j < deltaQ[i].Length; j++)
                     {
-                        deltaQ = CopyArray(quant);
+                        deltaQ = Util.CopyArray(quant);
                         deltaQ[i][j] = deltaQ[i][j] - deltad;
                         double obj1 = ObjectiveFunction(m, deltaQ);
                         deltaOFdeltaQ[i][j] = (OF - obj1) / deltad;
@@ -117,7 +117,7 @@ namespace HydroSense
                 // If they are, redistribute flows proportionally from Supplies
                 for (int i = 0; i < quantD.Length; i++)
                 {
-                    double totalD = SumRow(quantD, i);
+                    double totalD = Util.SumRow(quantD, i);
                     double limit = m.demandNodes.Limit(i);
                     if (totalD > limit)
                     {
@@ -142,7 +142,7 @@ namespace HydroSense
                 // If they are, redistribute flow proportionally between Demand Nodes
                 for (int i = 0; i < quant[0].Length; i++)
                 {
-                    double totalS = SumColumn(quant, i);
+                    double totalS = Util.SumColumn(quant, i);
                     double limit = m.supplyNodes.Limit(i);
                     if (totalS > limit)
                     {
@@ -162,7 +162,7 @@ namespace HydroSense
 
                 // a little output to check against Python code
                 Console.WriteLine(string.Format("k = {0}, Delta = {1}, OF = {2}", iter, delta, OF));
-                PrintArrayToConsole(quant);
+                Util.PrintArrayToConsole(quant);
             }
         }
 
@@ -186,7 +186,7 @@ namespace HydroSense
             // Calculate total cost of water for each supply node
             for (int i = 0; i < quantities[0].Length; i++)
             {
-                rval -= m.supplyNodes.IntegratedCost(i, SumColumn(quantities, i));
+                rval -= m.supplyNodes.IntegratedCost(i, Util.SumColumn(quantities, i));
             }
 
             // Calculate total benefits of water for each demand node and the
@@ -206,74 +206,5 @@ namespace HydroSense
             return rval;
         }
 
-
-        private double SumColumn(double[][] Q, int col)
-        {
-            double rval = 0.0;
-            for (int i = 0; i < Q.Length; i++)
-            {
-                rval += Q[i][col];
-            }
-            return rval;
-        }
-
-
-        private double SumRow(double[][] Q, int row)
-        {
-            double rval = 0.0;
-            for (int i = 0; i < Q[row].Length; i++)
-            {
-                rval += Q[row][i];
-            }
-            return rval;
-        }
-
-
-        private void InitializeArrayToZero(double[][] arr, double[][] pattern)
-        {
-            for (int i = 0; i < pattern.Length; i++)
-            {
-                arr[i] = new double[pattern[i].Length];
-                for (int j = 0; j < pattern[i].Length; j++)
-                {
-                    arr[i][j] = 0.0;
-                }
-            }
-        }
-        
-
-        // taken from here:
-        // http://stackoverflow.com/questions/4670720/extremely-fast-way-to-clone-the-values-of-a-jagged-array-into-a-second-array
-        private double[][] CopyArray(double[][] source)
-        {
-            double[][] rval = new double[source.Length][];
-
-            for (int i = 0; i < source.Length; i++)
-            {
-                double[] row = new double[source[i].Length];
-
-                Array.Copy(source[i], row, source[i].Length);
-                rval[i] = row;
-            }
-
-            return rval;
-
-        }
-
-        private static void PrintArrayToConsole(double[][] quant)
-        {
-            for (int i = 0; i < quant.Length; i++)
-            {
-                Console.Write("[");
-                for (int j = 0; j < quant[i].Length; j++)
-                {
-                    Console.Write(quant[i][j]);
-                    if (j < quant[i].Length - 1)
-                        Console.Write(", ");
-                }
-                Console.Write("]");
-                Console.WriteLine();
-            }
-        }
     }
 }
