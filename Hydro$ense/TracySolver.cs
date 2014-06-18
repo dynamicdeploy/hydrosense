@@ -13,8 +13,8 @@ namespace HydroSense
             double deltai = 0.005;
             double deltad = 0.01;
             double tolerance = 0.015;
-            double[][] quant = m.Q;
-            double[][] quantD = m.Q;
+            double[][] quant = CopyArray(m.Q);
+            double[][] quantD = CopyArray(m.Q);
             double[][] deltaQ = new double[m.Q.Length][];
             double[][] deltaOFdeltaQ = new double[m.Q.Length][];
             InitializeArrayToZero(deltaQ, m.Q);
@@ -197,7 +197,7 @@ namespace HydroSense
                 double qd = 0.0;
                 for (int j = 0; j < quantities[i].Length; j++)
                 {
-                    qd += m.linkCosts.LinkCostOrLoss(i, j, quantities[i][j]);
+                    qd += m.linkLosses.LinkCostOrLoss(i, j, quantities[i][j]);
                     rval -= m.linkCosts.IntegratedCost(i, j, quantities[i][j]);
                 }
                 rval += m.demandNodes.IntegratedCost(i, qd);
