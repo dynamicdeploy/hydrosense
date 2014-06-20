@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows.Forms;
 
 namespace HydroSense
@@ -9,10 +10,17 @@ namespace HydroSense
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Usage: Hydro$ense.exe input.xls(x)");
+                Console.WriteLine("Where: input.xls(x) contains the problem definition to run");
+            }
+
             ModelInput m = new ModelInput();
-            m.ReadHardcoded();
+            //m.ReadHardcoded();
+            m.ReadFromExcel(args[0]);
 
             TracySolver solver = new TracySolver();
             solver.Solve(m);

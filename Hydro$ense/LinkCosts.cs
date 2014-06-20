@@ -7,28 +7,29 @@ namespace HydroSense
 {
     class LinkCosts : Links
     {
-        public double[][][] yc { get; set; }
+        private double[][][] YC;
+        public double[][][] yc { get { return YC; } }
 
         public LinkCosts(double[][][] quantity, double[][][] value)
             : base(quantity, value)
         {
-            yc = new double[x.Length][][];
+            YC = new double[x.Length][][];
 
             double val;
-            for (int i = 0; i < yc.Length; i++)
+            for (int i = 0; i < YC.Length; i++)
             {
-                yc[i] = new double[x[i].Length][];
-                for (int j = 0; j < yc[i].Length; j++)
+                YC[i] = new double[x[i].Length][];
+                for (int j = 0; j < YC[i].Length; j++)
                 {
                     val = 0.0;
-                    yc[i][j] = new double[x[i][j].Length];
-                    for (int k = 0; k < yc[i][j].Length; k++)
+                    YC[i][j] = new double[x[i][j].Length];
+                    for (int k = 0; k < YC[i][j].Length; k++)
                     {
                         if (k > 0)
                         {
                             val += ((y[i][j][k] + y[i][j][k - 1]) / 2.0) * (x[i][j][k] - x[i][j][k - 1]);
                         }
-                        yc[i][j][k] = val;
+                        YC[i][j][k] = val;
                     }
                 }
             }

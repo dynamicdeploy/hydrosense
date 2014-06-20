@@ -89,7 +89,7 @@ class SupplyNodes():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Xc[k] <= q:
+    while self.Xc[k] <= q and k<self.NumPoints[n]:
         k += 1
     slope = (self.Yc[k] - self.Yc[k-1])/(self.Xc[k] - self.Xc[k-1])
     Cost = self.Yc[k-1] + (q - self.Xc[k-1])*slope
@@ -105,7 +105,7 @@ class SupplyNodes():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Xc[k] <= q: k += 1
+    while self.Xc[k] <= q and k<self.NumPoints[n]: k += 1
     slope = (self.YIc[k] - self.YIc[k-1])/(self.Xc[k] - self.Xc[k-1])
     Cost = self.YIc[k-1] + (q - self.Xc[k-1])*slope
     return Cost
@@ -196,7 +196,7 @@ class DemandNodes():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Xc[k] <= q: k += 1
+    while self.Xc[k] <= q and k<self.NumPoints[n]: k += 1
     slope = (self.YIc[k] - self.YIc[k-1])/(self.Xc[k] - self.Xc[k-1])
     Cost = self.YIc[k-1] + (q - self.Xc[k-1])*slope
     return Cost
@@ -278,7 +278,7 @@ class TransportationCosts ():
 #  Need to calculate cost, then return it as a value to main functions
 #
     k = nc
-    while self.Quant[k] <= Q:
+    while self.Quant[k] <= Q and k<self.NumPoints[n]:
         k += 1
     slope = (self.TC[k] - self.TC[k-1])/(self.Quant[k] - self.Quant[k-1])
     Cost = self.TC[k-1] + (Q - self.Quant[k-1])*slope
@@ -294,7 +294,7 @@ class TransportationCosts ():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Quant[k] <= q: k += 1
+    while self.Quant[k] <= q and k < self.NumPoints[n]: k += 1
     slope = (self.TIc[k] - self.TIc[k-1])/(self.Quant[k] - self.Quant[k-1])
     Cost = self.TIc[k-1] + (q - self.Quant[k-1])*slope
     return Cost
@@ -373,7 +373,7 @@ class TransportationLosses():
 #  Need to calculate loss, then return it as a value to main functions
 #
     k = nc
-    while self.Quant[k] <= Q:
+    while self.Quant[k] <= Q and k<self.NumPoints[n]:
         k += 1
     slope = (self.Loss[k] - self.Loss[k-1])/(self.Quant[k] - self.Quant[k-1])
     Cost = self.Loss[k-1] + (Q - self.Quant[k-1])*slope
@@ -399,7 +399,7 @@ class TransportationLosses():
 #  Need to calculate inverse of loss
 #
     k = nc
-    while self.Loss[k] <= Q: k += 1
+    while self.Loss[k] <= Q and k<self.NumPoints[n]: k += 1
     if (self.Loss[k] > 0.0):
       slope = (self.Quant[k] - self.Quant[k-1])/(self.Loss[k] - self.Loss[k-1])
       Cost = self.Quant[k-1] + (Q - self.Loss[k-1])*slope
@@ -432,12 +432,13 @@ def ObjectiveFunction(Sn, Dn, Q):
           for j in range (0, Dn):
               k = i + j*Sn
               Qs += Q[k]
+              OF -= TC.IntegratedCost(k, Q[k])
           OF -= MCS.IntegratedCost(i,Qs)
 #
 #  Calculate the Transportation Cost associated with delivering water
 #  from Supply node i to Demand node j
 #
-          OF -= TC.IntegratedCost(k, Q[k])
+          
 #      for i in range (0, Dn):
 #          for j in range (0, Sn):
 #            k = i*Sn + j

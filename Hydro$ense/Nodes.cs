@@ -5,9 +5,12 @@ namespace HydroSense
 {
     class Nodes
     {
-        public double[][] x { get; set; }
-        public double[][] y { get; set; }
-        public double[][] yc { get; set; }
+        private double[][] X;
+        private double[][] Y;
+        private double[][] YC;
+        public double[][] x { get { return X; } }
+        public double[][] y { get { return Y; } }
+        public double[][] yc { get { return YC; } }
 
         public Nodes(double[][] quantity, double[][] cost)
         {
@@ -15,27 +18,27 @@ namespace HydroSense
             {
                 throw new DataMisalignedException("must have a quantity/cost relationship for each node, check inputs");
             }
-            x = quantity;
-            y = cost;
-            yc = new double[quantity.Length][];
+            X = quantity;
+            Y = cost;
+            YC = new double[quantity.Length][];
 
             double val;
-            for (int i = 0; i < x.Length; i++)
+            for (int i = 0; i < X.Length; i++)
             {
-                if (x[i].Length != y[i].Length)
+                if (X[i].Length != Y[i].Length)
                 {
                     throw new DataMisalignedException("must have same number of quantities and costs, check inputs");
                 }
 
                 val = 0.0;
-                yc[i] = new double[x[i].Length];
-                for (int j = 0; j < x[i].Length; j++)
+                YC[i] = new double[X[i].Length];
+                for (int j = 0; j < X[i].Length; j++)
                 {
                     if (j > 0)
                     {
-                        val += ((y[i][j] + y[i][j - 1]) / 2.0) * (x[i][j] - x[i][j - 1]);
+                        val += ((Y[i][j] + Y[i][j - 1]) / 2.0) * (X[i][j] - X[i][j - 1]);
                     }
-                    yc[i][j] = val;
+                    YC[i][j] = val;
                 }
             }
         }

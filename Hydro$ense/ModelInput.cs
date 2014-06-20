@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NPOI.XSSF.UserModel;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using System.IO;
@@ -22,57 +23,272 @@ namespace HydroSense
 
         public void ReadFromExcel(string fileName)
         {
-            HSSFWorkbook wkbk = new HSSFWorkbook(File.OpenRead(fileName));
+            if (!File.Exists(fileName))
+                throw new FileNotFoundException("cannot find file: " + fileName);
 
-            ISheet supply = wkbk.GetSheet("supply curves");
-            ISheet demand = wkbk.GetSheet("demand curves");
-            ISheet linkcost = wkbk.GetSheet("transportation costs");
-            ISheet linkloss = wkbk.GetSheet("transportation losses");
-            ISheet guess = wkbk.GetSheet("initial guess");
+            FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
-            ReadNodesDataFromSheet(supply, supplyNodes);
-            ReadNodesDataFromSheet(demand, demandNodes);
-            ReadLinksDataFromSheet(linkcost, linkCosts);
-            ReadLinksDataFromSheet(linkloss, linkLosses);
-            ReadQuantityDataFromSheet(guess, Q);
+            IWorkbook wkbk;
+            if (fileName.EndsWith("xls"))
+                wkbk = new HSSFWorkbook(fs);
+            else
+                wkbk = new XSSFWorkbook(fs);
+
+            ISheet sheetSupply = wkbk.GetSheet("supply curves");
+            ISheet sheetDemand = wkbk.GetSheet("demand curves");
+            ISheet sheetLinkcost = wkbk.GetSheet("transportation costs");
+            ISheet sheetLinkloss = wkbk.GetSheet("transportation losses");
+            ISheet sheetGuess = wkbk.GetSheet("initial guess");
+
+            if (sheetSupply == null)
+                throw new InvalidDataException("Supply Curves worksheet not found, check spelling");
+            if (sheetDemand == null)
+                throw new InvalidDataException("Demand Curves worksheet not found, check spelling");
+            if (sheetLinkcost == null)
+                throw new InvalidDataException("Transportation Costs worksheet not found, check spelling");
+            if (sheetLinkloss == null)
+                throw new InvalidDataException("Transportation Losses worksheet not found, check spelling");
+            if (sheetGuess == null)
+                throw new InvalidDataException("Initial Guess worksheet not found, check spelling");
+
+            Nodes sNodes = ReadNodesDataFromSheet(sheetSupply);
+            supplyNodes = new Nodes(sNodes.x, sNodes.y);
+            
+            Nodes dNodes = ReadNodesDataFromSheet(sheetDemand);
+            demandNodes = new Nodes(dNodes.x, dNodes.y);
+
+            Links costs = ReadLinksDataFromSheet(sheetLinkcost);
+            linkCosts = new LinkCosts(costs.x, costs.y);
+
+            Links losses = ReadLinksDataFromSheet(sheetLinkloss);
+            linkLosses = new LinkLosses(losses.x, losses.y);
+
+            Q = ReadQuantityDataFromSheet(sheetGuess);
         }
 
-        private void ReadQuantityDataFromSheet(ISheet guess, double[][] Q)
+        private double[][] ReadQuantityDataFromSheet(ISheet sheet)
         {
-        }
+            int rowCount = GetRowCount(sheet);
+            double[][] rval = new double[rowCount][];
 
-        private void ReadLinksDataFromSheet(ISheet linkcost, Links linkPoints)
-        {
-        }
-
-        private void ReadNodesDataFromSheet(ISheet sheet, Nodes nodePoints)
-        {
-            int rowCount = sheet.PhysicalNumberOfRows;
-            double[][] x = new double[rowCount][];
-            double[][] y = new double[rowCount][];
-
-            for (int i = 0; i < rowCount; i+=2)
+            for (int i = 0; i < rowCount; i++)
             {
-                int colCountx = sheet.GetRow(i).LastCellNum;
-                int colCounty = sheet.GetRow(i + 1).LastCellNum;
+                IRow row = sheet.GetRow(i);
 
-                if (colCountx != colCounty)
+                int numPoints = GetPointCount(row);
+                rval[i] = new double[numPoints];
+                for (int j = 0; j < numPoints; j++)
+                {
+                    rval[i][j] = row.GetCell(j).NumericCellValue;
+                }
+            }
+
+            CheckEqualNumberPoints(rval);
+            return rval;
+        }
+
+        private Links ReadLinksDataFromSheet(ISheet sheet)
+        {
+            int rowCount = GetRowCount(sheet);
+            int numDemands = Convert.ToInt32(sheet.GetRow(rowCount - 1).GetCell(0).NumericCellValue);
+            
+            int numSupplies = 0;
+            while (Convert.ToInt32(sheet.GetRow(numSupplies).GetCell(0).NumericCellValue) == 1)
+            {
+                numSupplies++;
+            }
+            numSupplies /= 2;
+
+            double[][][] x = new double[numDemands][][];
+            double[][][] y = new double[numDemands][][];
+            for (int i = 0; i < numDemands; i++)
+            {
+                x[i] = new double[numSupplies][];
+                y[i] = new double[numSupplies][];
+            }
+
+            for (int i = 0; i < rowCount; i++)
+            {
+                IRow row = sheet.GetRow(i);
+                int dem = Convert.ToInt32(sheet.GetRow(i).GetCell(0).NumericCellValue) - 1;
+                int sup = Convert.ToInt32(sheet.GetRow(i).GetCell(1).NumericCellValue) - 1;
+
+                int numPoints = GetPointCount(row) - 2;
+
+                if (numPoints > 0)
+                {
+                    if (i % 2 == 0)
+                    {
+                        x[dem][sup] = new double[numPoints];
+                        for (int k = 0; k < numPoints; k++)
+                        {
+                            x[dem][sup][k] = row.GetCell(k + 2).NumericCellValue;
+                        }
+                    }
+                    else
+                    {
+                        y[dem][sup] = new double[numPoints];
+                        for (int k = 0; k < numPoints; k++)
+                        {
+                            y[dem][sup][k] = row.GetCell(k + 2).NumericCellValue;
+                        }
+                    } 
+                }
+            }
+            CheckEqualNumberPoints(x, y);
+            return new Links(x, y);
+        }
+
+       
+
+        private Nodes ReadNodesDataFromSheet(ISheet sheet)
+        {
+            int rowCount = GetRowCount(sheet);
+            double[][] x = new double[rowCount / 2][];
+            double[][] y = new double[rowCount / 2][];
+
+            int xidx = 0;
+            int yidx = 0;
+            for (int i = 0; i < rowCount; i++)
+            {
+                IRow row = sheet.GetRow(i);
+
+                int numPoints = GetPointCount(row);
+                if (numPoints > 0)
+                {
+                    if (i % 2 == 0)
+                    {
+                        x[xidx] = new double[numPoints];
+                        for (int j = 0; j < numPoints; j++)
+                        {
+                            x[xidx][j] = row.GetCell(j).NumericCellValue;
+                        }
+                        xidx++;
+                    }
+                    else
+                    {
+                        y[yidx] = new double[numPoints];
+                        for (int j = 0; j < numPoints; j++)
+                        {
+                            y[yidx][j] = row.GetCell(j).NumericCellValue;
+                        }
+                        yidx++;
+                    } 
+                }
+            }
+            CheckEqualNumberPoints(x, y);
+            return new Nodes(x, y);
+        }
+
+        private int GetRowCount(ISheet sheet)
+        {
+            int rval = 0;
+
+            for (int i = 0; i < sheet.PhysicalNumberOfRows; i++)
+            {
+                try
+                {
+                    double val = sheet.GetRow(i).GetCell(0).NumericCellValue;
+                    rval++;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+            return rval;
+        }
+
+        private int GetPointCount(IRow row)
+        {
+            int rval = 0;
+
+            for (int i = 0; i < row.PhysicalNumberOfCells; i++)
+            {
+                ICell cell = row.GetCell(i);
+                if (cell.ToString() == "")
+                {
+                    continue;
+                }
+
+                try
+                {
+                    double val = cell.NumericCellValue;
+                    rval++;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+            return rval;
+        }
+
+        /// <summary>
+        /// Check that initial guess is not a jagged array even though by definition it could be,
+        /// I used a jagged array because they are supposed to be faster
+        /// </summary>
+        /// <param name="q"></param>
+        private void CheckEqualNumberPoints(double[][] q)
+        {
+            int numPoints = q[0].Length;
+            for (int i = 0; i < q.Length; i++)
+            {
+                if (q[i].Length != numPoints)
+                {
+                    throw new DataMisalignedException("must have an initial guess for every demand/supply, set it to zero if there is no relationship");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Check that the x,y jagged array has the same number of rows and points in each row
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        private void CheckEqualNumberPoints(double[][] x, double[][] y)
+        {
+            if (x.Length != y.Length)
+            {
+                throw new DataMisalignedException("must have a quantity/cost relationship for each node, check inputs");
+            }
+
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (x[i].Length != y[i].Length)
                 {
                     throw new DataMisalignedException("must have the same number of quantity/cost points for each node, check inputs");
                 }
+            }
+        }
 
-                x[i] = new double[colCountx];
-                y[i] = new double[colCountx];
+        /// <summary>
+        /// Check that the x,y,z jagged array has the same number of rows/columns and points in each row
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        private void CheckEqualNumberPoints(double[][][] x, double[][][] y)
+        {
+            if (x.Length != y.Length)
+            {
+                throw new DataMisalignedException("must have the same number of quantity/cost nodes, check inputs");
+            }
 
-                IRow rowx = sheet.GetRow(i);
-                IRow rowy = sheet.GetRow(i + 1);
-                for (int j = 0; j < colCountx; j++)
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (x[i].Length != y[i].Length)
                 {
-                    x[i][j] = rowx.GetCell(j).NumericCellValue;
-                    y[i][j] = rowy.GetCell(j).NumericCellValue;
+                    throw new DataMisalignedException("must have a quantity/cost relationship for each node, check inputs");
+                }
+
+                for (int j = 0; j < x[i].Length; j++)
+                {
+                    if (x[i][j].Length != y[i][j].Length)
+                    {
+                        throw new DataMisalignedException("must have the same number of quantity/cost points for each node, check inputs");
+                    }
                 }
             }
-            nodePoints = new Nodes(x, y);
         }
 
         public void ReadHardcoded()

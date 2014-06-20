@@ -7,13 +7,15 @@ namespace HydroSense
 {
     class Links
     {
-        public double[][][] x { get; set; }
-        public double[][][] y { get; set; }
+        private double[][][] X;
+        private double[][][] Y;
+        public double[][][] x { get { return X; } }
+        public double[][][] y { get { return Y; } }
 
         public Links(double[][][] quantity, double[][][] value)
         {
-            x = quantity;
-            y = value;
+            X = quantity;
+            Y = value;
         }
 
         public double Limit(int dNode, int sNode)
