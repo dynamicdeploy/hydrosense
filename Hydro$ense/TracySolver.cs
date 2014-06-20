@@ -164,6 +164,7 @@ namespace HydroSense
                 Console.WriteLine(string.Format("k = {0}, Delta = {1}, OF = {2}", iter, delta, OF));
                 Util.PrintArrayToConsole(quant);
             }
+            m.Q = quant;
         }
 
 
