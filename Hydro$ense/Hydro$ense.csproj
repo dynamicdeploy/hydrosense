@@ -54,19 +54,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>packages\NPOI.2.0.6\lib\net20\ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="NPOI">
-      <HintPath>packages\NPOI.2.0.6\lib\net20\NPOI.dll</HintPath>
+      <HintPath>..\packages\NPOI.2.0.6\lib\net20\NPOI.dll</HintPath>
     </Reference>
     <Reference Include="NPOI.OOXML">
-      <HintPath>packages\NPOI.2.0.6\lib\net20\NPOI.OOXML.dll</HintPath>
+      <HintPath>..\packages\NPOI.2.0.6\lib\net20\NPOI.OOXML.dll</HintPath>
     </Reference>
     <Reference Include="NPOI.OpenXml4Net">
-      <HintPath>packages\NPOI.2.0.6\lib\net20\NPOI.OpenXml4Net.dll</HintPath>
+      <HintPath>..\packages\NPOI.2.0.6\lib\net20\NPOI.OpenXml4Net.dll</HintPath>
     </Reference>
     <Reference Include="NPOI.OpenXmlFormats">
-      <HintPath>packages\NPOI.2.0.6\lib\net20\NPOI.OpenXmlFormats.dll</HintPath>
+      <HintPath>..\packages\NPOI.2.0.6\lib\net20\NPOI.OpenXmlFormats.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

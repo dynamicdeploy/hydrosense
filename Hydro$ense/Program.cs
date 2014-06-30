@@ -19,8 +19,8 @@ namespace HydroSense
             }
 
             ModelInput m = new ModelInput();
-            //m.ReadHardcoded();
-            m.ReadFromExcel(args[0]);
+            m.ReadHardcoded();
+            //m.ReadFromExcel(args[0]);
 
             TracySolver solver = new TracySolver();
             solver.Solve(m);
