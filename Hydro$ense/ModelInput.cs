@@ -370,9 +370,9 @@ namespace HydroSense
             
             // initial guess
             Q = new double[3][];
-            Q[0] = new double[] { 10050.64038617956, 11312.969207627437 };
-            Q[1] = new double[] { 22028.15601517901, 0.0 };
-            Q[2] = new double[] { 0.0, 13684.530792372565 };
+            Q[0] = new double[] { 10000, 10000 };
+            Q[1] = new double[] { 10000, 0 };
+            Q[2] = new double[] { 0, 10000 };
 
         }
     }

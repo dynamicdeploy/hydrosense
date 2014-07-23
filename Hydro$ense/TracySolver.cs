@@ -8,22 +8,28 @@ namespace HydroSense
     class TracySolver
     {
 
-        internal void Solve(ModelInput m)
+        internal void Solve(ModelInput mi)
         {
             double deltai = 0.005;
             double deltad = 0.01;
             double tolerance = 0.015;
-            double[][] quant = Util.CopyArray(m.Q);
-            double[][] quantD = Util.CopyArray(m.Q);
-            double[][] deltaQ = new double[m.Q.Length][];
-            double[][] deltaOFdeltaQ = new double[m.Q.Length][];
-            Util.InitializeArrayToZero(deltaQ, m.Q);
-            Util.InitializeArrayToZero(deltaOFdeltaQ, m.Q);
+            double[][] quant = Util.CopyArray(mi.Q);
+            double[][] quantD = Util.CopyArray(mi.Q);
+            double[][] delQ = Util.CopyArray(mi.Q);
+            double[][] delQ1 = Util.CopyArray(mi.Q);
+            double[][] delQ2 = Util.CopyArray(mi.Q);
+            double[][] delQ12 = Util.CopyArray(mi.Q);
+            double[][] delOFdelQ = new double[mi.Q.Length][];
+            double[][] delOFdelQ2 = new double[mi.Q.Length][];
+            double[][] del2OFdelQ2 = new double[mi.Q.Length][];
+            Util.InitializeArrayToZero(delOFdelQ, mi.Q);
+            Util.InitializeArrayToZero(delOFdelQ2, mi.Q);
+            Util.InitializeArrayToZero(del2OFdelQ2, mi.Q);
 
 
             Console.WriteLine("Initial Guess:");
             Util.PrintArrayToConsole(quant);
-            double OF = ObjectiveFunction(m, quant);
+            double OF = ObjectiveFunction(mi, quant);
 
 
             // Perform iterative colculations using a while loop construction
@@ -32,9 +38,10 @@ namespace HydroSense
             // approach, with a dampening factor to adjust the decision variables
             // during each iteration
             int iter = 0;
+            int maxIter = 500;
             double delta = 1000;
             double dampen = 1;
-            while (delta > tolerance && iter < 10000)
+            while (delta > tolerance && iter < maxIter)
             {
                 iter++;
                 // Compute the numerical derivates for the Objective Function with
@@ -44,14 +51,58 @@ namespace HydroSense
                 //   the integral of the marginal cost functions from zero to the Quantity
                 //   provided from supply node j to demand node i. The DVs are the array 
                 //   of quantity from supply node j to demand node i
-                for (int i = 0; i < deltaQ.Length; i++)
+                double OF1;
+                double OF12;
+                double OF2;
+                for (int i = 0; i < quant.Length; i++)
                 {
-                    for (int j = 0; j < deltaQ[i].Length; j++)
+                    for (int j = 0; j < quant[i].Length; j++)
                     {
-                        deltaQ = Util.CopyArray(quant);
-                        deltaQ[i][j] = deltaQ[i][j] - deltad;
-                        double obj1 = ObjectiveFunction(m, deltaQ);
-                        deltaOFdeltaQ[i][j] = (OF - obj1) / deltad;
+                        delQ1[i][j] = delQ[i][j] - deltad;
+                        delQ12[i][j] = delQ[i][j] - deltad;
+                        OF1 = ObjectiveFunction(mi, delQ1);
+                        delOFdelQ[i][j] = (OF - OF1) / deltad;
+
+                        for (int k = 0; k < i; k++)
+                        {
+                            delQ2[i][k] -= deltad;
+                            delQ12[i][k] -= deltad;
+                            OF2 = ObjectiveFunction(mi, delQ2);
+                            OF12 = ObjectiveFunction(mi, delQ12);
+                            delOFdelQ2[i][k] = (OF2 - OF12) / deltad;
+                            del2OFdelQ2[i][k] = (delOFdelQ[i][j] - delOFdelQ2[i][k]) / deltad;
+                            delQ2[i][k] = quant[i][k];
+                            delQ12[i][k] = quant[i][k];
+                        }
+
+                        for (int ii = 0; ii < quant.Length; ii++)
+                        {
+                            for (int jj = 0; jj < quant[ii].Length; jj++)
+                            {
+                                if (ii == 0 & jj == 0)
+                                    continue;
+                                delQ2[ii][jj] -= deltad;
+                                delQ12[ii][jj] -= deltad;
+                                OF2 = ObjectiveFunction(mi, delQ2);
+                                OF12 = ObjectiveFunction(mi, delQ12);
+                                delOFdelQ2[ii][jj] = (OF2 - OF12) / deltad;
+                                del2OFdelQ2[ii][jj] = (delOFdelQ[i][j] - delOFdelQ2[i][jj]) / deltad;
+                                delQ2[ii][jj] = quant[ii][jj];
+                                delQ12[ii][jj] = quant[ii][jj];
+                            }
+                        }
+
+                        // set the second derivative on the diagonal
+                        delQ1[i][j] += 2 * deltad;
+                        OF2 = ObjectiveFunction(mi, delQ1);
+                        delOFdelQ2[i][j] = (OF2 - OF) / deltad;
+                        del2OFdelQ2[i][j] = (delOFdelQ2[i][j] - delOFdelQ[i][j]) / deltad;
+
+                        // use the Marquard Algorithm to condition the matrix
+                        del2OFdelQ2[i][j] += Math.Exp((iter - maxIter) * deltad);
+                        delQ2[i][j] = quant[i][j];
+                        delQ1[i][j] = quant[i][j];
+                        delQ12[i][j] = quant[i][j];
                     }
                 }
 
@@ -67,11 +118,11 @@ namespace HydroSense
                 //negative values.  Additional routines could be put in place to bound
                 //QuantS with maximum values also.
                 double sum = 0.0;
-                for (int i = 0; i < deltaOFdeltaQ.Length; i++)
+                for (int i = 0; i < delOFdelQ.Length; i++)
                 {
-                    for (int j = 0; j < deltaOFdeltaQ[i].Length; j++)
+                    for (int j = 0; j < delOFdelQ[i].Length; j++)
                     {
-                        sum += Math.Pow(deltaOFdeltaQ[i][j], 2.0);
+                        sum += Math.Pow(delOFdelQ[i][j], 2.0);
                     }
                 }
                 double delta1 = Math.Sqrt(sum);
@@ -79,11 +130,11 @@ namespace HydroSense
                 {
                     dampen *= delta / delta1;
                 }
-                for (int i = 0; i < deltaOFdeltaQ.Length; i++)
+                for (int i = 0; i < delOFdelQ.Length; i++)
                 {
-                    for (int j = 0; j < deltaOFdeltaQ[i].Length; j++)
+                    for (int j = 0; j < delOFdelQ[i].Length; j++)
                     {
-                        quant[i][j] += dampen * deltaOFdeltaQ[i][j];
+                        quant[i][j] += dampen * delOFdelQ[i][j];
                     }
                 }
 
@@ -93,7 +144,7 @@ namespace HydroSense
                 {
                     for (int j = 0; j < quantD[i].Length; j++)
                     {
-                        quantD[i][j] = m.linkLosses.LinkCostOrLoss(i, j, quantD[i][j]);
+                        quantD[i][j] = mi.linkLosses.LinkCostOrLoss(i, j, quantD[i][j]);
                     }
                 }
 
@@ -104,7 +155,7 @@ namespace HydroSense
                     for (int j = 0; j < quant[i].Length; j++)
                     {
                         double val = quant[i][j];
-                        double limit = m.linkLosses.Limit(i, j);
+                        double limit = mi.linkLosses.Limit(i, j);
                         if (val < 0)
                             val = 0.0;
                         if (val > limit)
@@ -118,7 +169,7 @@ namespace HydroSense
                 for (int i = 0; i < quantD.Length; i++)
                 {
                     double totalD = Util.SumRow(quantD, i);
-                    double limit = m.demandNodes.Limit(i);
+                    double limit = mi.demandNodes.Limit(i);
                     if (totalD > limit)
                     {
                         double ratio = limit / totalD;
@@ -134,7 +185,7 @@ namespace HydroSense
                 {
                     for (int j = 0; j < quant[i].Length; j++)
                     {
-                        quant[i][j] = m.linkLosses.LossInverse(i, j, quantD[i][j]);
+                        quant[i][j] = mi.linkLosses.LossInverse(i, j, quantD[i][j]);
                     }
                 }
 
@@ -143,7 +194,7 @@ namespace HydroSense
                 for (int i = 0; i < quant[0].Length; i++)
                 {
                     double totalS = Util.SumColumn(quant, i);
-                    double limit = m.supplyNodes.Limit(i);
+                    double limit = mi.supplyNodes.Limit(i);
                     if (totalS > limit)
                     {
                         double ratio = 0.9999 * (limit / totalS);
@@ -155,7 +206,7 @@ namespace HydroSense
                 }
 
                 // Calculate new objective function
-                OF = ObjectiveFunction(m, quant);
+                OF = ObjectiveFunction(mi, quant);
 
                 // Adjust change in decision variables
                 delta = delta1 * dampen;
@@ -164,7 +215,7 @@ namespace HydroSense
                 Console.WriteLine(string.Format("k = {0}, Delta = {1}, OF = {2}", iter, delta, OF));
                 Util.PrintArrayToConsole(quant);
             }
-            m.Q = quant;
+            mi.Q = quant;
         }
 
 
