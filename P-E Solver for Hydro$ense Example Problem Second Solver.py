@@ -89,7 +89,7 @@ class SupplyNodes():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Xc[k] <= q and k<self.NumPoints[n]:
+    while self.Xc[k] < q:
         k += 1
     slope = (self.Yc[k] - self.Yc[k-1])/(self.Xc[k] - self.Xc[k-1])
     Cost = self.Yc[k-1] + (q - self.Xc[k-1])*slope
@@ -105,7 +105,7 @@ class SupplyNodes():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Xc[k] <= q and k<self.NumPoints[n]: k += 1
+    while self.Xc[k] < q: k += 1
     slope = (self.YIc[k] - self.YIc[k-1])/(self.Xc[k] - self.Xc[k-1])
     Cost = self.YIc[k-1] + (q - self.Xc[k-1])*slope
     return Cost
@@ -182,6 +182,7 @@ class DemandNodes():
         nc += self.NumPoints[i]
         i += 1
     k = nc
+    while self.Xc[k] < q: k += 1
     slope = (self.Yc[k] - self.Yc[k-1])/(self.Xc[k] - self.Xc[k-1])
     Cost = self.Yc[k-1] + (q - self.Xc[k-1])*slope
     return Cost
@@ -196,7 +197,7 @@ class DemandNodes():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Xc[k] <= q and k<self.NumPoints[n]: k += 1
+    while self.Xc[k] < q: k += 1
     slope = (self.YIc[k] - self.YIc[k-1])/(self.Xc[k] - self.Xc[k-1])
     Cost = self.YIc[k-1] + (q - self.Xc[k-1])*slope
     return Cost
@@ -220,13 +221,13 @@ class TransportationCosts ():
     for i in range (0, Nd):
         for j in range (0, Ns):
             self.NumPoints.append(Np[i*Ns+j])
-            for k in range (0, Np[i*Ns+j]):
-                self.Quant.append(x[nc+k])
-                self.TC.append(y[nc+k])
 #
 #  Need to calculate integrated marginal cost of water transportation
 #
-                if (k > 0) : Value += ((y[k] + y[k-1])/2.0)*(x[k] - x[k-1])
+            for k in range (0, Np[i*Ns+j]):
+                self.Quant.append(x[nc+k])
+                self.TC.append(y[nc+k])
+                if (k > 0) : Value += ((y[nc+k] + y[nc+k-1])/2.0)*(x[nc+k] - x[nc+k-1])
                 else: Value = 0.0
                 self.TIc.append(Value)
             nc += Np[i*Ns+j]
@@ -258,7 +259,7 @@ class TransportationCosts ():
 #  Calculate the Cost delivered  to Demand Node i from Supply Node j
 #  Adjusting for transportation losses
 #
-  def TransCost(self, Ns, Nd, Q):
+  def MarginalCost(self, Ns, Nd, Q):
     Loss = 0.0
     n = 0
 #
@@ -278,7 +279,7 @@ class TransportationCosts ():
 #  Need to calculate cost, then return it as a value to main functions
 #
     k = nc
-    while self.Quant[k] <= Q and k<self.NumPoints[n]:
+    while self.Quant[k] < Q:
         k += 1
     slope = (self.TC[k] - self.TC[k-1])/(self.Quant[k] - self.Quant[k-1])
     Cost = self.TC[k-1] + (Q - self.Quant[k-1])*slope
@@ -294,7 +295,7 @@ class TransportationCosts ():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Quant[k] <= q and k < self.NumPoints[n]: k += 1
+    while self.Quant[k] < q: k += 1
     slope = (self.TIc[k] - self.TIc[k-1])/(self.Quant[k] - self.Quant[k-1])
     Cost = self.TIc[k-1] + (q - self.Quant[k-1])*slope
     return Cost
@@ -373,7 +374,8 @@ class TransportationLosses():
 #  Need to calculate loss, then return it as a value to main functions
 #
     k = nc
-    while self.Quant[k] <= Q and k<self.NumPoints[n]:
+#    print 'Ns, Nd, nc, k, Q = ', Ns, Nd, nc, k, Q
+    while (self.Quant[k] < Q):
         k += 1
     slope = (self.Loss[k] - self.Loss[k-1])/(self.Quant[k] - self.Quant[k-1])
     Cost = self.Loss[k-1] + (Q - self.Quant[k-1])*slope
@@ -399,7 +401,7 @@ class TransportationLosses():
 #  Need to calculate inverse of loss
 #
     k = nc
-    while self.Loss[k] <= Q and k<self.NumPoints[n]: k += 1
+    while self.Loss[k] < Q: k += 1
     if (self.Loss[k] > 0.0):
       slope = (self.Quant[k] - self.Quant[k-1])/(self.Loss[k] - self.Loss[k-1])
       Cost = self.Quant[k-1] + (Q - self.Loss[k-1])*slope
@@ -432,13 +434,12 @@ def ObjectiveFunction(Sn, Dn, Q):
           for j in range (0, Dn):
               k = i + j*Sn
               Qs += Q[k]
-              OF -= TC.IntegratedCost(k, Q[k])
-          OF -= MCS.IntegratedCost(i,Qs)
 #
 #  Calculate the Transportation Cost associated with delivering water
 #  from Supply node i to Demand node j
 #
-          
+              OF -= TC.IntegratedCost(k, Q[k])
+          OF -= MCS.IntegratedCost(i,Qs)
 #      for i in range (0, Dn):
 #          for j in range (0, Sn):
 #            k = i*Sn + j
@@ -464,6 +465,77 @@ def ObjectiveFunction(Sn, Dn, Q):
 #  End ObjectiveFunction definition
 #-------------------------------------------------------------------------
 #
+#  Routine to solve an N X N set of linear equations
+#
+def LinearEquationSolver(N, C, y):
+#
+#  size is the number of rows and columns in matrix C
+#  y contains size values, and is the right hand vector
+#  for the linear system of equations [C]{x} = <y>
+#
+    x = list()
+    ys = list()
+    k = 0
+    MaxIt = 100
+    maxdel = 1.0
+    DelLimit = 0.0000001
+    k = 0
+    for i in range (0, size):
+        x.append(0.0)
+        ys.append(0.0)
+#
+#  Solve the system using an iterative approach by computing
+#  Each x value as a 2X2 matrix solution
+#
+    while k < MaxIt and maxdel > DelLimit:
+        maxdel = 0.0
+        for i in range (0, size-1):
+            sum0 = y[i]
+            sum1 = y[i+1]
+            for j in range (0, i):
+                sum0 -= C[i*N+j]*x[j]
+                sum1 -= C[(i+1)*N+j]*x[j]
+            for j in range (i+2, size):
+                sum0 -= C[i*N+j]*x[j]
+                sum1 -= C[(i+1)*N+j]*x[j]
+            num = C[(i+1)*(N+1)]*sum0-C[N*i+i+1]*sum1
+            den = C[(i+1)*(N+1)]*C[i*(N+1)]-C[i*N+i+1]*C[N*(i+1)+i]
+            xnew = num/den
+            delx = xnew - x[i]
+            x[i] = xnew
+            if abs(delx) > maxdel: maxdel = abs(delx)
+        sum0 = y[N-2]
+        sum1 = y[N-1]
+        for j in range (0, N-2):
+            sum0 -= C[(N-2)*N+j]*x[j]
+            sum1 -= C[(N-1)*N+j]*x[j]
+        num = C[(N-1)*N+N-2]*sum0-C[(N-2)*N+N-2]*sum1
+        den = C[(N-1)*N+N-2]*C[(N-2)*N+N-1] - C[(N-2)*N+N-2]*C[(N-1)*N+N-1]
+        xnew = num/den
+        delx = xnew - x[size-1]
+        x[size-1] = xnew
+        if abs(delx) > maxdel: maxdel = abs(delx)
+        if maxdel < DelLimit: k = MaxIt
+        k += 1
+#        print " k = ", k, "maxdel = ", maxdel
+#        print " x = ", x
+#
+#   As a check, compute the new right hand vector using the iteratively solved
+#   vector of x
+#
+#    print "Check on solved values"
+#    print "      y          ys"
+#    for i in range (0, size):
+#        for j in range (0, size):
+#            ys[i] += C[i*size+j]*x[j]
+#        print y[i], ys[i]
+#
+#  return the vector x
+#
+    return x
+#
+#  End routine
+#
 #-------------------------------------------------------------------------
 #
 import math
@@ -480,7 +552,8 @@ import array
 #
 deltai = 0.005
 deltad = 0.01
-tolerance = 0.015
+tolerance = 10.0
+MaxIt = 500
 #--------------------------------------------------------------------------
 #  Generate the number of demand and supply nodes
 #--------------------------------------------------------------------------
@@ -531,16 +604,21 @@ NPs.append(np)
 #-------------------Assign Cost Functions----------------------
 #
 print 'Supply Cost Relationships'
-#print NPs
+print NPs
 #print Xs
+#print Ys
 MCS = SupplyNodes(SNodes,NPs,Xs,Ys)
 SCost = list()
-QuantS = [10000.0, 10000.0]
-SCost.append(MCS.MarginalCost(0,QuantS[0]))
-SCost.append(MCS.MarginalCost(1,QuantS[1]))
+SICost = list()
+nc = 0
+for i in range (0, SNodes):
+    for j in range (0, NPs[i]):
+        SCost.append(MCS.MarginalCost(i,Xs[j+nc]))
+        SICost.append(MCS.IntegratedCost(i,Xs[j+nc]))
+#        print i, j, j+nc, Xs[j+nc], SCost[j+nc], SICost[j+nc]
+    nc += NPs[i]
 #print SCost
-#print MCS.IntegratedCost(0,QuantS[0])
-#print MCS.IntegratedCost(1,QuantS[1])
+#print SICost
 #
 #  End of defining Marginal Supply Curves
 #
@@ -590,23 +668,26 @@ for i in range(0, N):
     Yd.append(Yt[i])
 np = len(Xt)
 NPd.append(np)
-##
+#
 #
 #  End of defining Marginal Demand Curves
 #
 print 'Demand Cost Relationships'
-#print NPd
+print NPd
+#print Xd
+#print Yd
 MCD = DemandNodes(DNodes,NPd,Xd,Yd)
 DCost = list()
-QuantD = [5000.0, 5000.0, 5000.0]
+DICost = list()
+nc = 0
 for i in range (0, DNodes):
-    DCost.append(MCD.MarginalCost(i,QuantD[i]))
-#    print MCD.QuantValue(i)
-#print QuantD
+    for j in range (0, NPd[i]):
+        DCost.append(MCD.MarginalCost(i,Xd[j+nc]))
+        DICost.append(MCD.IntegratedCost(i,Xd[j+nc]))
+#        print i, j, j+nc, Xd[j+nc], DCost[j+nc], DICost[j+nc]
+    nc += NPd[i]
 #print DCost
-#print MCD.IntegratedCost(0,QuantD[0])
-#print MCD.IntegratedCost(1,QuantD[1])
-#print MCD.IntegratedCost(2,QuantD[2])
+#print DICost
 #--------------------------------------------------------------------------
 #
 #  Define the marginal cost of transportation of moving water between each
@@ -681,7 +762,24 @@ for i in range(0,len(Xt)):
 np = len(Xt)
 NPtc.append(np)
 TC = TransportationCosts(NPtc,SNodes,DNodes,Xtc,Ytc)
+#
+print 'Transportation Cost Relationships'
+print NPtc
+#print Xtc
+#print Ytc
 TCost = list()
+TICost = list()
+nc = 0
+for i in range (0, DNodes):
+    for j in range (0, SNodes):
+        n = i*SNodes + j
+        for k in range (0, NPtc[n]):
+          TCost.append(TC.MarginalCost(j,i,Xtc[k+nc]))
+          TICost.append(TC.IntegratedCost(n,Xtc[k+nc]))
+#          print i, j, k, k+nc, Xtc[k+nc], TCost[k+nc], TICost[k+nc]
+        nc += NPtc[n]
+#print TCost
+#print TICost
 #
 #--------------------------------------------------------------------------
 #
@@ -756,14 +854,18 @@ for i in range(0,len(Xt)):
     Ytr.append(Yt[i])
 np = len(Xt)
 NPtr.append(np)
-#print NPtr
+print 'Transportation Loss Relationships'
+print NPtr
 TL = TransportationLosses(NPtr,SNodes,DNodes,Xtr,Ytr)
 TLoss = list()
-#Quant = 100.0
-#for i in range(0,DNodes):
-#    for j in range (0, SNodes):
-#        TLoss.append(TL.TransLoss(j, i, Quant))
-#print 'Transportation Loss Relationsihps'
+nc = 0
+for i in range (0, DNodes):
+    for j in range (0, SNodes):
+        n = i*SNodes + j
+        for k in range (0, NPtr[n]):
+          TLoss.append(TL.TransLoss(j,i,Xtr[k+nc]))
+#          print i, j, k, k+nc, Xtr[k+nc], Ytr[k+nc], TLoss[k+nc]
+        nc += NPtr[n]
 #print TLoss
 #--------------------------------------------------------------------------
 #  The 'Matrix' of supply functions is created and stored as
@@ -780,11 +882,8 @@ TLoss = list()
 Quant = list()
 QuantD = list()
 print " Start Iterations "
-#Quant =  [10000.0, 10000.0, 10000.0, 0.0, 0.0, 10000.0]
-Quant =  [10050.64038617956, 11312.969207627437, 22028.15601517901, 0.0, 0.0, 13684.530792372565]
-#for i in range(0,DNodes):
-#    for j in range(0, SNodes):
-#        Quant.append(random.uniform(3.0, 4.0))
+Quant =  [10000.0, 10000.0, 10000.0, 0.0, 0.0, 10000.0]
+#Quant = [12000.0, 14000.0, 6000.00, 0.00, 0.00, 12000.0]
 for i in range(0, DNodes):
     for j in range (0, SNodes):
         k = i*SNodes + j
@@ -801,36 +900,108 @@ print "Quantity = ", Quant, ": Objective Function = ", OF
 #  during each iteration
 #
 #-------
-delQ = list()
+delQ1 = list()
+delQ2 = list()
+delQ12 = list()
 dOFdQ = list()
-for i in range (0,DNodes):
-    for j in range (0,SNodes):
-        delQ.append(0)
-        dOFdQ.append(0)
+dOFdQ2 = list()
+d2OFdQ2 = list()
+dQ = list()
 kk = 0
+for i in range (0,DNodes*SNodes):
+      dQ.append(0.0)
+      delQ1.append(0.0)
+      delQ2.append(0.0)
+      delQ12.append(0.0)
+      dOFdQ.append(0.0)
+      dOFdQ2.append(0.0)
+      for j in range (0,DNodes*SNodes):
+           d2OFdQ2.append(0.0)
+
 Delta = 1000.0
-dampen = 1.0
-while Delta > tolerance and kk < 10000:
+dampen = 1000.0
+while Delta > tolerance and kk < MaxIt:
 #
 #    Compute the numerical derivates for the Objective Function with
 #    respect to each decision variable:
-#      The Objective Function is the integral of the marginal demand
-#      functions from zero to the Quantity provided at each demand node minus
-#      the integral of the marginal cost functions from zero to the Quantity
-#      provided from supply node j to demand node i
-#      The DVs are the array of quantity from supply node j to
-#      demand node i
+#    The Objective Function is the integral of the marginal demand
+#    functions from zero to the Quantity provided at each demand node minus
+#    the integral of the marginal cost functions from zero to the Quantity
+#    provided from supply node j to demand node i
+#    The DVs are the array of quantity from supply node j to
+#    demand node i
 #
+#  First initialize the arrays that are used for computing the
+#  first and second derivatives of the Objective function with respect
+#  to the water delivered from supply to demand nodes
+#
+    OF = ObjectiveFunction(SNodes, DNodes, Quant)
+#    print "k = ", kk, "deltad = ", deltad, "Objective Function = ", OF
+#    print "Quantity = ", Quant
+    for i in range (0,DNodes*SNodes):
+          delQ1[i] = Quant[i]
+          delQ2[i] = Quant[i]
+          delQ12[i] = Quant[i]
+    size = DNodes*SNodes
     for i in range(0, DNodes*SNodes):
-        for j in range(0, DNodes*SNodes):
-            if j == i:
-                delQ[j] = Quant[i] - deltad
-            else:
-                delQ[j] = Quant[j]
-        ObjFun1 = ObjectiveFunction(SNodes, DNodes, delQ)
-        dOFdQ[i] = ((OF - ObjFun1)/deltad)
-#        print i, j, ObjFun1, dOFdQ[i]
+#
+#    Compute the first derivate of the objective function with respect to
+#    each of the decision variables (flows between Supply Node i and Demand
+#    Node j
+#
+        delQ1[i] -= deltad
+        delQ12[i] -= deltad
+        OF1 = ObjectiveFunction(SNodes, DNodes, delQ1)
+        dOFdQ[i] = ((OF - OF1)/deltad)
+        for j in range (0, i):
+            delQ2[j] -= deltad
+            delQ12[j] -= deltad
+            OF2 = ObjectiveFunction(SNodes, DNodes, delQ2)
+            OF12 = ObjectiveFunction(SNodes, DNodes, delQ12)
+            dOFdQ2[j] = (OF2 - OF12)/deltad
+            d2OFdQ2[i*size+j] = (dOFdQ[i] - dOFdQ2[j])/deltad
+            delQ2[j] = Quant[j]
+            delQ12[j] = Quant[j]
+        for j in range (i+1, DNodes*SNodes):
+            delQ2[j] -= deltad
+            delQ12[j] -= deltad
+            OF2 = ObjectiveFunction(SNodes, DNodes, delQ2)
+            OF12 = ObjectiveFunction(SNodes, DNodes, delQ12)
+            dOFdQ2[j] = (OF2 - OF12)/deltad
+            d2OFdQ2[i*size+j] = (dOFdQ[i] - dOFdQ2[j])/deltad
+            delQ2[j] = Quant[j]
+            delQ12[j] = Quant[j]
+#
+#  Determine the second derivative on the diagonal
+#
+        delQ1[i] += 2.0*deltad
+        OF2 = ObjectiveFunction(SNodes, DNodes, delQ1)
+        dOFdQ2[i] = (OF2 - OF)/deltad
+        d2OFdQ2[i*size+i] = (dOFdQ2[i] - dOFdQ[i])/deltad
+#
+#  Use the Marquard Algorithm to Condition the matrix
+#
+        d2OFdQ2[i*size+i] += math.exp(float(kk - MaxIt)*deltad)
+        delQ2[i] = Quant[i]
+        delQ1[i] = Quant[i]
+        delQ12[i] = Quant[i]
     kk += 1
+#
+#  Determine the Change in Quantity from Supply Node i to Demand Node j
+#  by solving the linear set of equations [d2OFdQ2]{dQ} = {dOFdQ}
+#  using the LinearEquationSolver Routine
+#
+#    print " [d2OFdQ2]*{dQ} = <dOFdQ> "
+#    for i in range (0, SNodes*DNodes):
+#        for j in range (0, SNodes*DNodes): print d2OFdQ2[i*size+j],
+#        print dOFdQ[i]
+    dQ = LinearEquationSolver(size, d2OFdQ2, dOFdQ)
+#
+#  Check on computed changes
+#
+    print " Link  Quantity     and   Change "
+    for i in range (0, DNodes*SNodes):
+       print i, Quant[i], dQ[i]
 #
 #  The partial derivates of the Objective Function with respect to the
 #  Quantity provided from supply node j to demand node i are the
@@ -846,26 +1017,34 @@ while Delta > tolerance and kk < 10000:
 #
     sum = 0.0
     for i in range(0,DNodes*SNodes):
-        sum += dOFdQ[i]*dOFdQ[i]
+        sum += dQ[i]*dQ[i]
+        sum2 = 0.0
+        Quant[i] += dQ[i]
     Delta1 = math.sqrt(sum)
-    dadj = dampen
-    if Delta1 > Delta: dadj = dampen*(Delta/Delta1)
-    for i in range(DNodes*SNodes):
-        Quant[i] += dadj*dOFdQ[i]
+#    dadj = dampen
+#    if Delta1 > Delta: dadj = dampen*(Delta/Delta1)
 #
 #  Need to determine the Quantity delivered to the Demand nodes by adjusting
 #  for transportation losses from the supply nodes
 #
-    for i in range(0, DNodes):
-      for j in range(0, SNodes):
+#  Determine if all Supply, Demand and Transportation flows are positive and
+#  are less than the flow or use limits.
+#  If they are, no adjustments, if they aren't, set to zero or max value
+#
+    for i in range (0, DNodes):
+        for j in range (0, SNodes):
+            k = i*SNodes + j
+            if (Quant[k] < 0.0): Quant[k] = 0.0
+            else:
+                if (Quant[k] > TL.Limit(k)): Quant[k] = TL.Limit(k)
 #
 #  Calculate the total demand at node i by summing all of the demands
 #  associated with supply j, minus the transportation loss from j to i
 #
+    for i in range(0, DNodes):
+      for j in range(0, SNodes):
           k = i*SNodes + j
           QuantD[k] = TL.TransLoss(j, i, Quant[k])
-    print "Quantity Supply = ", Quant
-    print "Quantity Demand = ", QuantD
 #
 #  Determine if all Supply to Demand flows are positive and are less than
 #  Maximum flow rates between Supply node j and Demand node i
@@ -910,6 +1089,7 @@ while Delta > tolerance and kk < 10000:
                 qt = Quant[i+SNodes*j]
                 Quant[i+j*SNodes] = qt*ratio
     print "Quant = ", Quant
+    print "QuantD = ", QuantD
 #
 #  Calculate new objective function using updated Quantities of water delivered
 #
@@ -917,7 +1097,7 @@ while Delta > tolerance and kk < 10000:
 #
 #  Adjust change in decision variables
 #
-    Delta = Delta1*dampen
+#    Delta = Delta1*dampen
     print ' k = ', kk, ' Delta = ', Delta, ' OF = ', OF
 #
 #  These are calculation checking routines
