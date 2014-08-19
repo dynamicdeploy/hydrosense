@@ -89,6 +89,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ModelInput.cs" />
+    <Compile Include="ModelOutput.cs" />
     <Compile Include="Nodes.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

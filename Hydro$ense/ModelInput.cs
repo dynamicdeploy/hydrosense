@@ -28,11 +28,8 @@ namespace HydroSense
 
             FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
-            IWorkbook wkbk;
-            if (fileName.EndsWith("xls"))
-                wkbk = new HSSFWorkbook(fs);
-            else
-                wkbk = new XSSFWorkbook(fs);
+            IWorkbook wkbk = WorkbookFactory.Create(fs);
+            fs.Close();
 
             ISheet sheetSupply = wkbk.GetSheet("supply curves");
             ISheet sheetDemand = wkbk.GetSheet("demand curves");
