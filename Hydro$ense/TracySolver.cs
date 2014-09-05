@@ -10,7 +10,6 @@ namespace HydroSense
 
         internal void Solve(ModelInput mi)
         {
-            double deltai = 0.005;
             double deltad = 0.01;
             double tolerance = 0.015;
             int numDemandNodes = mi.Q.Length;
@@ -25,8 +24,6 @@ namespace HydroSense
             double[] delOFdelQ = new double[numNodes];
             double[] delOFdelQ2 = new double[numNodes];
             double[][] del2OFdelQ2 = new double[numNodes][];
-            //Util.InitializeArrayToZero(delOFdelQ, mi.Q);
-            //Util.InitializeArrayToZero(delOFdelQ2, mi.Q);
             Util.InitializeArrayToZero(del2OFdelQ2, numNodes, numNodes);
 
 
@@ -99,7 +96,7 @@ namespace HydroSense
 
                 }
 
-                //  Determine the Change in Quantity from Supply Node i to Demand Node j
+                //  Determine the change in quantity from Demand Node i to Supply Node j 
                 //  by solving the linear set of equations [d2OFdQ2]{dQ} = {dOFdQ}
                 //  using the LinearEquationSolver Routine
                 double[] dQ = LinearEquationSolver(numNodes, del2OFdelQ2, delOFdelQ);
@@ -255,10 +252,9 @@ namespace HydroSense
 
         private double[] LinearEquationSolver(int N, double[][] C, double[] y)
         {
-            //  size is the number of rows and columns in matrix C
+            //  N is the number of demand and supply nodes
             //  y contains size values, and is the right hand vector
             //  for the linear system of equations [C]{x} = <y>
-            //
             double[] rval = new double[N];
             double[] ys = new double[N];
             int k = 0;
