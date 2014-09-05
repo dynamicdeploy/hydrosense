@@ -13,18 +13,21 @@ namespace HydroSense
             double deltai = 0.005;
             double deltad = 0.01;
             double tolerance = 0.015;
+            int numDemandNodes = mi.Q.Length;
+            int numSupplyNodes = mi.Q[0].Length;
+            int numNodes = numDemandNodes * numSupplyNodes;
             double[][] quant = Util.CopyArray(mi.Q);
             double[][] quantD = Util.CopyArray(mi.Q);
             double[][] delQ = Util.CopyArray(mi.Q);
             double[][] delQ1 = Util.CopyArray(mi.Q);
             double[][] delQ2 = Util.CopyArray(mi.Q);
             double[][] delQ12 = Util.CopyArray(mi.Q);
-            double[][] delOFdelQ = new double[mi.Q.Length][];
-            double[][] delOFdelQ2 = new double[mi.Q.Length][];
-            double[][] del2OFdelQ2 = new double[mi.Q.Length][];
-            Util.InitializeArrayToZero(delOFdelQ, mi.Q);
-            Util.InitializeArrayToZero(delOFdelQ2, mi.Q);
-            Util.InitializeArrayToZero(del2OFdelQ2, mi.Q);
+            double[] delOFdelQ = new double[numNodes];
+            double[] delOFdelQ2 = new double[numNodes];
+            double[][] del2OFdelQ2 = new double[numNodes][];
+            //Util.InitializeArrayToZero(delOFdelQ, mi.Q);
+            //Util.InitializeArrayToZero(delOFdelQ2, mi.Q);
+            Util.InitializeArrayToZero(del2OFdelQ2, numNodes, numNodes);
 
 
             Console.WriteLine("Initial Guess:");
@@ -54,6 +57,7 @@ namespace HydroSense
                 double OF1;
                 double OF12;
                 double OF2;
+                int count = 0;
                 for (int i = 0; i < quant.Length; i++)
                 {
                     for (int j = 0; j < quant[i].Length; j++)
@@ -61,50 +65,44 @@ namespace HydroSense
                         delQ1[i][j] = delQ[i][j] - deltad;
                         delQ12[i][j] = delQ[i][j] - deltad;
                         OF1 = ObjectiveFunction(mi, delQ1);
-                        delOFdelQ[i][j] = (OF - OF1) / deltad;
+                        delOFdelQ[count] = (OF - OF1) / deltad;
 
-                        for (int k = 0; k < i; k++)
+                        for (int ki = 0; ki < numDemandNodes; ki++)
                         {
-                            delQ2[i][k] -= deltad;
-                            delQ12[i][k] -= deltad;
-                            OF2 = ObjectiveFunction(mi, delQ2);
-                            OF12 = ObjectiveFunction(mi, delQ12);
-                            delOFdelQ2[i][k] = (OF2 - OF12) / deltad;
-                            del2OFdelQ2[i][k] = (delOFdelQ[i][j] - delOFdelQ2[i][k]) / deltad;
-                            delQ2[i][k] = quant[i][k];
-                            delQ12[i][k] = quant[i][k];
-                        }
-
-                        for (int ii = 0; ii < quant.Length; ii++)
-                        {
-                            for (int jj = 0; jj < quant[ii].Length; jj++)
+                            for (int kj = 0; kj < numSupplyNodes; kj++)
                             {
-                                if (ii == 0 & jj == 0)
-                                    continue;
-                                delQ2[ii][jj] -= deltad;
-                                delQ12[ii][jj] -= deltad;
+                                delQ2[ki][kj] -= deltad;
+                                delQ12[ki][kj] -= deltad;
                                 OF2 = ObjectiveFunction(mi, delQ2);
                                 OF12 = ObjectiveFunction(mi, delQ12);
-                                delOFdelQ2[ii][jj] = (OF2 - OF12) / deltad;
-                                del2OFdelQ2[ii][jj] = (delOFdelQ[i][j] - delOFdelQ2[i][jj]) / deltad;
-                                delQ2[ii][jj] = quant[ii][jj];
-                                delQ12[ii][jj] = quant[ii][jj];
+                                delOFdelQ2[ki * numSupplyNodes + kj] = (OF2 - OF12) / deltad;
+                                del2OFdelQ2[count][ki * numSupplyNodes + kj] = (delOFdelQ[count] - delOFdelQ2[ki * numSupplyNodes + kj]) / deltad;
+                                delQ2[ki][kj] = quant[ki][kj];
+                                delQ12[ki][kj] = quant[ki][kj];
                             }
                         }
 
                         // set the second derivative on the diagonal
                         delQ1[i][j] += 2 * deltad;
                         OF2 = ObjectiveFunction(mi, delQ1);
-                        delOFdelQ2[i][j] = (OF2 - OF) / deltad;
-                        del2OFdelQ2[i][j] = (delOFdelQ2[i][j] - delOFdelQ[i][j]) / deltad;
+                        delOFdelQ2[count] = (OF2 - OF) / deltad;
+                        del2OFdelQ2[count][count] = (delOFdelQ2[count] - delOFdelQ[count]) / deltad;
 
                         // use the Marquard Algorithm to condition the matrix
-                        del2OFdelQ2[i][j] += Math.Exp((iter - maxIter) * deltad);
+                        del2OFdelQ2[count][count] += Math.Exp((iter - maxIter) * deltad);
                         delQ2[i][j] = quant[i][j];
                         delQ1[i][j] = quant[i][j];
                         delQ12[i][j] = quant[i][j];
+
+                        count++;
                     }
+
                 }
+
+                //  Determine the Change in Quantity from Supply Node i to Demand Node j
+                //  by solving the linear set of equations [d2OFdQ2]{dQ} = {dOFdQ}
+                //  using the LinearEquationSolver Routine
+                double[] dQ = LinearEquationSolver(numNodes, del2OFdelQ2, delOFdelQ);
 
                 //The partial derivates of the Objective Function with respect to the
                 //Quantity provided from supply node j to demand node i are the
@@ -120,21 +118,18 @@ namespace HydroSense
                 double sum = 0.0;
                 for (int i = 0; i < delOFdelQ.Length; i++)
                 {
-                    for (int j = 0; j < delOFdelQ[i].Length; j++)
-                    {
-                        sum += Math.Pow(delOFdelQ[i][j], 2.0);
-                    }
+                    sum += Math.Pow(delOFdelQ[i], 2.0);
                 }
                 double delta1 = Math.Sqrt(sum);
-                if (delta1 > delta)
+                //if (delta1 > delta)
+                //{
+                //    dampen *= delta / delta1;
+                //}
+                for (int i = 0; i < quant.Length; i++)
                 {
-                    dampen *= delta / delta1;
-                }
-                for (int i = 0; i < delOFdelQ.Length; i++)
-                {
-                    for (int j = 0; j < delOFdelQ[i].Length; j++)
+                    for (int j = 0; j < quant[i].Length; j++)
                     {
-                        quant[i][j] += dampen * delOFdelQ[i][j];
+                        quant[i][j] += delOFdelQ[i * numSupplyNodes + j];
                     }
                 }
 
@@ -176,7 +171,7 @@ namespace HydroSense
                         for (int j = 0; j < quantD[i].Length; j++)
                         {
                             quantD[i][j] *= ratio;
-                        } 
+                        }
                     }
                 }
 
@@ -258,5 +253,71 @@ namespace HydroSense
             return rval;
         }
 
+        private double[] LinearEquationSolver(int N, double[][] C, double[] y)
+        {
+            //  size is the number of rows and columns in matrix C
+            //  y contains size values, and is the right hand vector
+            //  for the linear system of equations [C]{x} = <y>
+            //
+            double[] rval = new double[N];
+            double[] ys = new double[N];
+            int k = 0;
+            int MaxIt = 100;
+            double maxdel = 1.0;
+            double DelLimit = 0.0000001;
+            //
+            //  Solve the system using an iterative approach by computing
+            //  Each x value as a 2X2 matrix solution
+            //
+            while (k < MaxIt && maxdel > DelLimit)
+            {
+                maxdel = 0.0;
+                for (int i = 0; i < N - 1; i++)
+                {
+                    double sum0 = y[i];
+                    double sum1 = y[i + 1];
+                    for (int j = 0; j < i; j++)
+                    {
+                        sum0 -= C[i][j] * rval[j];
+                        sum1 -= C[i + 1][j] * rval[j];
+                    }
+                    for (int j = i + 2; j < N; j++)
+                    {
+                        sum0 -= C[i][j] * rval[j];
+                        sum1 -= C[i + 1][j] * rval[j];
+                    }
+
+                    double num = C[i + 1][i + 1] * sum0 - C[i][i + 1] * sum1;
+                    double den = C[i + 1][i + 1] * C[i][i] - C[i][i + 1] * C[i + 1][i];
+                    double xnew = num / den;
+                    double delx = xnew - rval[i];
+                    rval[i] = xnew;
+                    if (Math.Abs(delx) > maxdel)
+                        maxdel = Math.Abs(delx);
+
+                    sum0 = y[N - 2];
+                    sum1 = y[N - 1];
+                    for (int j = 0; j < N - 2; j++)
+                    {
+                        sum0 -= C[N - 2][j] * rval[j];
+                        sum1 -= C[N - 1][j] * rval[j];
+                    }
+
+                    num = C[N - 1][N - 2] * sum0 - C[N - 2][N - 2] * sum1;
+                    den = C[N - 1][N - 2] * C[N - 2][N - 1] - C[N - 2][N - 2] * C[N - 1][N - 1];
+                    xnew = num / den;
+                    delx = xnew - rval[N - 1];
+                    rval[N - 1] = xnew;
+                    if (Math.Abs(delx) > maxdel)
+                        maxdel = Math.Abs(delx);
+                    if (maxdel < DelLimit)
+                        k = MaxIt;
+                    k += 1;
+                }
+            }
+            return rval;
+        }
     }
 }
+
+

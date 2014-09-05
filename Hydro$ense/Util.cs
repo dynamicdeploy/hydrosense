@@ -85,12 +85,12 @@ namespace HydroSense
             return rval;
         }
 
-        public static void InitializeArrayToZero(double[][] arr, double[][] pattern)
+        public static void InitializeArrayToZero(double[][] arr, int numRows, int numColumns)
         {
-            for (int i = 0; i < pattern.Length; i++)
+            for (int i = 0; i < numRows; i++)
             {
-                arr[i] = new double[pattern[i].Length];
-                for (int j = 0; j < pattern[i].Length; j++)
+                arr[i] = new double[numColumns];
+                for (int j = 0; j < numColumns; j++)
                 {
                     arr[i][j] = 0.0;
                 }
