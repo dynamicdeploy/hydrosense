@@ -59,6 +59,12 @@ namespace HydroSense
         /// <param name="n">node number</param>
         /// <param name="q">quantity</param>
         /// <returns></returns>
+        /// 
+        public double LowerLimit(int n)
+        {
+            return x[n].First();
+        }
+
         public double MarginalCost(int n, double q)
         {
             return Util.CalculateCost(x[n], y[n], q);

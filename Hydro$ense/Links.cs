@@ -23,6 +23,11 @@ namespace HydroSense
             return x[dNode][sNode].Last();
         }
 
+        public double LowerLimit(int dNode, int sNode)
+        {
+            return x[dNode][sNode].First();
+        }
+
         public double LinkCostOrLoss(int dNode, int sNode, double quantity)
         {
             return Util.CalculateCost(x[dNode][sNode], y[dNode][sNode], quantity);

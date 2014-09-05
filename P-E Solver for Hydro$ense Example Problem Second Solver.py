@@ -79,6 +79,16 @@ class SupplyNodes():
         i += 1;
     return self.Xc[nc - 1]
 #
+#----------Define Lower Limiting Value
+#
+  def LowerLimit(self,n):
+    nc = 0
+    i = 0
+    while i < n:
+        nc += self.NumPoints[i]
+        i += 1;
+    return self.Xc[nc]
+#
 #----------Define the function for returning the marginal cost--------------
 #
   def MarginalCost(self, n, q):
@@ -105,9 +115,12 @@ class SupplyNodes():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Xc[k] < q: k += 1
-    slope = (self.YIc[k] - self.YIc[k-1])/(self.Xc[k] - self.Xc[k-1])
-    Cost = self.YIc[k-1] + (q - self.Xc[k-1])*slope
+    if (q <= self.Xc[0]):
+        Cost = self.YIc[0]
+    else:
+        while self.Xc[k] < q: k += 1
+        slope = (self.YIc[k] - self.YIc[k-1])/(self.Xc[k] - self.Xc[k-1])
+        Cost = self.YIc[k-1] + (q - self.Xc[k-1])*slope
     return Cost
 #
 #  End Definitions for the SupplyNode Class
@@ -172,6 +185,16 @@ class DemandNodes():
         i += 1;
     return self.Xc[nc - 1]
 #
+#----------Define Lower Limiting Value
+#
+  def LowerLimit(self,n):
+    nc = 0
+    i = 0
+    while i < n:
+        nc += self.NumPoints[i]
+        i += 1;
+    return self.Xc[nc]
+#
 #-------------------------------------------------------------------------
 #
   def MarginalCost(self, n, q):
@@ -197,9 +220,12 @@ class DemandNodes():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Xc[k] < q: k += 1
-    slope = (self.YIc[k] - self.YIc[k-1])/(self.Xc[k] - self.Xc[k-1])
-    Cost = self.YIc[k-1] + (q - self.Xc[k-1])*slope
+    if (q <= self.Xc[0]):
+        Cost = self.YIc[0]
+    else:
+       while self.Xc[k] < q: k += 1
+       slope = (self.YIc[k] - self.YIc[k-1])/(self.Xc[k] - self.Xc[k-1])
+       Cost = self.YIc[k-1] + (q - self.Xc[k-1])*slope
     return Cost
 #
 #  End Definitions for the DemandNodes Class
@@ -244,6 +270,16 @@ class TransportationCosts ():
         nc += self.NumPoints[i]
         i += 1;
     return self.Quant[nc - 1]
+#
+#----------Define Lower Limiting Value
+#
+  def LowerLimit(self,n):
+    nc = 0
+    i = 0
+    while i < n:
+        nc += self.NumPoints[i]
+        i += 1;
+    return self.Quant[nc]
 #
 #  Define the number of points for each transportation link
 #
@@ -295,9 +331,12 @@ class TransportationCosts ():
         nc += self.NumPoints[i]
         i += 1
     k = nc
-    while self.Quant[k] < q: k += 1
-    slope = (self.TIc[k] - self.TIc[k-1])/(self.Quant[k] - self.Quant[k-1])
-    Cost = self.TIc[k-1] + (q - self.Quant[k-1])*slope
+    if (q <= self.Quant[0]):
+        Cost = self.TIc[0]
+    else:
+        while self.Quant[k] < q: k += 1
+        slope = (self.TIc[k] - self.TIc[k-1])/(self.Quant[k] - self.Quant[k-1])
+        Cost = self.TIc[k-1] + (q - self.Quant[k-1])*slope
     return Cost
 #
 #  End of TransportationCost Class
@@ -375,10 +414,13 @@ class TransportationLosses():
 #
     k = nc
 #    print 'Ns, Nd, nc, k, Q = ', Ns, Nd, nc, k, Q
-    while (self.Quant[k] < Q):
-        k += 1
-    slope = (self.Loss[k] - self.Loss[k-1])/(self.Quant[k] - self.Quant[k-1])
-    Cost = self.Loss[k-1] + (Q - self.Quant[k-1])*slope
+    if (Q <= self.Quant[0]):
+        Cost = self.Loss[0]
+    else:
+        while (self.Quant[k] < Q):
+            k += 1
+        slope = (self.Loss[k] - self.Loss[k-1])/(self.Quant[k] - self.Quant[k-1])
+        Cost = self.Loss[k-1] + (Q - self.Quant[k-1])*slope
     return Cost
 #
 #  Calculate the quantity needed from Supply Node j to Demand Node i
@@ -433,12 +475,16 @@ def ObjectiveFunction(Sn, Dn, Q):
           Qs = 0.0
           for j in range (0, Dn):
               k = i + j*Sn
-              Qs += Q[k]
+              if (Q[k] < TC.LowerLimit(k)):
+                Qa = TC.LowerLimit(k)
+              else:
+                Qa = Q[k]
+              Qs += Qa
 #
 #  Calculate the Transportation Cost associated with delivering water
 #  from Supply node i to Demand node j
 #
-              OF -= TC.IntegratedCost(k, Q[k])
+              OF -= TC.IntegratedCost(k, Qa)
           OF -= MCS.IntegratedCost(i,Qs)
 #      for i in range (0, Dn):
 #          for j in range (0, Sn):
@@ -455,7 +501,11 @@ def ObjectiveFunction(Sn, Dn, Q):
 #  associated with supply j, minus the transportation loss from j to i
 #
               k = i*Sn+j
-              Qd += TL.TransLoss(j, i, Q[k])
+              if (Q[k] < TC.LowerLimit(k)):
+                Qa = TC.LowerLimit(k)
+              else:
+                Qa = Q[k]
+              Qd += TL.TransLoss(j, i, Qa)
 #
 #  Integrate the Marginal Cost Function for the total demand at node i
 #
@@ -552,8 +602,8 @@ import array
 #
 deltai = 0.005
 deltad = 0.01
-tolerance = 10.0
-MaxIt = 500
+tolerance = 0.01
+MaxIt = 50
 #--------------------------------------------------------------------------
 #  Generate the number of demand and supply nodes
 #--------------------------------------------------------------------------
@@ -935,6 +985,7 @@ while Delta > tolerance and kk < MaxIt:
 #  first and second derivatives of the Objective function with respect
 #  to the water delivered from supply to demand nodes
 #
+    kk += 1
     OF = ObjectiveFunction(SNodes, DNodes, Quant)
 #    print "k = ", kk, "deltad = ", deltad, "Objective Function = ", OF
 #    print "Quantity = ", Quant
@@ -953,6 +1004,10 @@ while Delta > tolerance and kk < MaxIt:
         delQ12[i] -= deltad
         OF1 = ObjectiveFunction(SNodes, DNodes, delQ1)
         dOFdQ[i] = ((OF - OF1)/deltad)
+#
+#  Align this routine with the C# routine for computing second derivatives
+#  Currently there is an error in the C# routine
+#
         for j in range (0, i):
             delQ2[j] -= deltad
             delQ12[j] -= deltad
@@ -979,13 +1034,14 @@ while Delta > tolerance and kk < MaxIt:
         dOFdQ2[i] = (OF2 - OF)/deltad
         d2OFdQ2[i*size+i] = (dOFdQ2[i] - dOFdQ[i])/deltad
 #
-#  Use the Marquard Algorithm to Condition the matrix
+#  Use the Marquardt Algorithm to Condition the matrix
 #
-        d2OFdQ2[i*size+i] += math.exp(float(kk - MaxIt)*deltad)
+        d2OFdQ2[i*size+i] += math.exp(float(kk - 500)*deltad)
+#        d2OFdQ2[i*size+i] += math.exp(float(kk - MaxIt))
+#        d2OFdQ2[i*size+i] += math.exp(-(1.0/float(kk)))
         delQ2[i] = Quant[i]
         delQ1[i] = Quant[i]
         delQ12[i] = Quant[i]
-    kk += 1
 #
 #  Determine the Change in Quantity from Supply Node i to Demand Node j
 #  by solving the linear set of equations [d2OFdQ2]{dQ} = {dOFdQ}
@@ -1017,10 +1073,10 @@ while Delta > tolerance and kk < MaxIt:
 #
     sum = 0.0
     for i in range(0,DNodes*SNodes):
-        sum += dQ[i]*dQ[i]
-        sum2 = 0.0
+        if (Quant[i] > 0.0): sum += (dQ[i]/Quant[i])*(dQ[i]/Quant[i])
         Quant[i] += dQ[i]
     Delta1 = math.sqrt(sum)
+
 #    dadj = dampen
 #    if Delta1 > Delta: dadj = dampen*(Delta/Delta1)
 #
@@ -1094,11 +1150,12 @@ while Delta > tolerance and kk < MaxIt:
 #  Calculate new objective function using updated Quantities of water delivered
 #
     OF = ObjectiveFunction(SNodes, DNodes, Quant)
+#    Delta = Delta1
 #
 #  Adjust change in decision variables
 #
 #    Delta = Delta1*dampen
-    print ' k = ', kk, ' Delta = ', Delta, ' OF = ', OF
+    print ' k = ', kk, ' Delta = ', Delta1, ' OF = ', OF
 #
 #  These are calculation checking routines
 #  Remove after code is thoroughly checked

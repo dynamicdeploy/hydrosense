@@ -13,7 +13,7 @@ namespace HydroSense
                 return 0.0;
 
             int i = 0;
-            while (quantities[i] <= quantity && i < quantities.Length - 1)
+            while (quantities[i] < quantity && i < quantities.Length - 1)
             {
                 i++;
             }

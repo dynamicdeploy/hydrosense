@@ -21,8 +21,8 @@ namespace HydroSense
 
             Console.Write("Reading model input...");
             ModelInput m = new ModelInput();
-            //m.ReadHardcoded();
-            m.ReadFromExcel(args[0]);
+            m.ReadHardcoded();
+            //m.ReadFromExcel(args[0]);
             Console.WriteLine("Done");
 
             Console.WriteLine("Solving...");
@@ -31,7 +31,7 @@ namespace HydroSense
 
             Console.WriteLine("Writing output...");
             ModelOutput mOut = new ModelOutput(m);
-            mOut.ToExcel(args[1]);
+            //mOut.ToExcel(args[1]);
 
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();

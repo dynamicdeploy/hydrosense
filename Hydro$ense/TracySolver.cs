@@ -10,7 +10,6 @@ namespace HydroSense
 
         internal void Solve(ModelInput mi)
         {
-            double deltai = 0.005;
             double deltad = 0.01;
             double tolerance = 0.015;
             int numDemandNodes = mi.Q.Length;
@@ -18,15 +17,15 @@ namespace HydroSense
             int numNodes = numDemandNodes * numSupplyNodes;
             double[][] quant = Util.CopyArray(mi.Q);
             double[][] quantD = Util.CopyArray(mi.Q);
-            double[][] delQ = Util.CopyArray(mi.Q);
+            //double[][] delQ = Util.CopyArray(mi.Q);
             double[][] delQ1 = Util.CopyArray(mi.Q);
             double[][] delQ2 = Util.CopyArray(mi.Q);
             double[][] delQ12 = Util.CopyArray(mi.Q);
             double[] delOFdelQ = new double[numNodes];
             double[] delOFdelQ2 = new double[numNodes];
+            double[] dQ = new double[numNodes];
+            double[][] dQW = Util.CopyArray(mi.Q);
             double[][] del2OFdelQ2 = new double[numNodes][];
-            //Util.InitializeArrayToZero(delOFdelQ, mi.Q);
-            //Util.InitializeArrayToZero(delOFdelQ2, mi.Q);
             Util.InitializeArrayToZero(del2OFdelQ2, numNodes, numNodes);
 
 
@@ -40,13 +39,14 @@ namespace HydroSense
             // Current routines use a simplified first derivative search
             // approach, with a dampening factor to adjust the decision variables
             // during each iteration
-            int iter = 0;
-            int maxIter = 500;
+            double iter = 0.0;
+            double maxIter = 500.0;
             double delta = 1000;
             double dampen = 1;
             while (delta > tolerance && iter < maxIter)
             {
-                iter++;
+                iter += 1.0;
+                OF = ObjectiveFunction(mi, quant);
                 // Compute the numerical derivates for the Objective Function with
                 // respect to each decision variable:
                 //   The Objective Function is the integral of the marginal demand
@@ -62,47 +62,91 @@ namespace HydroSense
                 {
                     for (int j = 0; j < quant[i].Length; j++)
                     {
-                        delQ1[i][j] = delQ[i][j] - deltad;
-                        delQ12[i][j] = delQ[i][j] - deltad;
+                        delQ1[i][j] = quant[i][j];
+                        delQ2[i][j] = quant[i][j];
+                        delQ12[i][j] = quant[i][j];
+                    }
+                }
+                for (int i = 0; i < quant.Length; i++)
+                {
+                    for (int j = 0; j < quant[i].Length; j++)
+                    {
+                        delQ1[i][j] = quant[i][j] - deltad;
+                        delQ12[i][j] = quant[i][j] - deltad;
                         OF1 = ObjectiveFunction(mi, delQ1);
-                        delOFdelQ[count] = (OF - OF1) / deltad;
+                        delOFdelQ[i*numSupplyNodes+j] = (OF - OF1) / deltad;
 
-                        for (int ki = 0; ki < numDemandNodes; ki++)
+                        for (int ki = 0; ki < i; ki++)
                         {
-                            for (int kj = 0; kj < numSupplyNodes; kj++)
+                            for (int kj = 0; kj < j; kj++)
                             {
-                                delQ2[ki][kj] -= deltad;
-                                delQ12[ki][kj] -= deltad;
+                                delQ2[ki][kj] = quant[ki][kj] - deltad;
+                                delQ12[ki][kj] = quant[ki][kj] - deltad;
                                 OF2 = ObjectiveFunction(mi, delQ2);
                                 OF12 = ObjectiveFunction(mi, delQ12);
                                 delOFdelQ2[ki * numSupplyNodes + kj] = (OF2 - OF12) / deltad;
-                                del2OFdelQ2[count][ki * numSupplyNodes + kj] = (delOFdelQ[count] - delOFdelQ2[ki * numSupplyNodes + kj]) / deltad;
+                                del2OFdelQ2[i*numSupplyNodes+j][ki * numSupplyNodes + kj] = (delOFdelQ[i*numSupplyNodes+j] - delOFdelQ2[ki * numSupplyNodes + kj]) / deltad;
+                                delQ2[ki][kj] = quant[ki][kj];
+                                delQ12[ki][kj] = quant[ki][kj];
+                            }
+                            for (int kj = j+1; kj < numSupplyNodes; kj++)
+                            {
+                                delQ2[ki][kj] = quant[ki][kj] - deltad;
+                                delQ12[ki][kj] = quant[ki][kj] - deltad;
+                                OF2 = ObjectiveFunction(mi, delQ2);
+                                OF12 = ObjectiveFunction(mi, delQ12);
+                                delOFdelQ2[ki * numSupplyNodes + kj] = (OF2 - OF12) / deltad;
+                                del2OFdelQ2[i * numSupplyNodes + j][ki * numSupplyNodes + kj] = (delOFdelQ[i * numSupplyNodes + j] - delOFdelQ2[ki * numSupplyNodes + kj]) / deltad;
                                 delQ2[ki][kj] = quant[ki][kj];
                                 delQ12[ki][kj] = quant[ki][kj];
                             }
                         }
-
+                        for (int ki = i + 1; ki < numDemandNodes; ki++)
+                        {
+                            for (int kj = 0; kj < j; kj++)
+                            {
+                                delQ2[ki][kj] = quant[ki][kj] - deltad;
+                                delQ12[ki][kj] = quant[ki][kj] - deltad;
+                                OF2 = ObjectiveFunction(mi, delQ2);
+                                OF12 = ObjectiveFunction(mi, delQ12);
+                                delOFdelQ2[ki * numSupplyNodes + kj] = (OF2 - OF12) / deltad;
+                                del2OFdelQ2[i * numSupplyNodes + j][ki * numSupplyNodes + kj] = (delOFdelQ[i * numSupplyNodes + j] - delOFdelQ2[ki * numSupplyNodes + kj]) / deltad;
+                                delQ2[ki][kj] = quant[ki][kj];
+                                delQ12[ki][kj] = quant[ki][kj];
+                            }
+                            for (int kj = j + 1; kj < numSupplyNodes; kj++)
+                            {
+                                delQ2[ki][kj] = quant[ki][kj] - deltad;
+                                delQ12[ki][kj] = quant[ki][kj] - deltad;
+                                OF2 = ObjectiveFunction(mi, delQ2);
+                                OF12 = ObjectiveFunction(mi, delQ12);
+                                delOFdelQ2[ki * numSupplyNodes + kj] = (OF2 - OF12) / deltad;
+                                del2OFdelQ2[i * numSupplyNodes + j][ki * numSupplyNodes + kj] = (delOFdelQ[i * numSupplyNodes + j] - delOFdelQ2[ki * numSupplyNodes + kj]) / deltad;
+                                delQ2[ki][kj] = quant[ki][kj];
+                                delQ12[ki][kj] = quant[ki][kj];
+                            }
+                        }
                         // set the second derivative on the diagonal
                         delQ1[i][j] += 2 * deltad;
                         OF2 = ObjectiveFunction(mi, delQ1);
-                        delOFdelQ2[count] = (OF2 - OF) / deltad;
-                        del2OFdelQ2[count][count] = (delOFdelQ2[count] - delOFdelQ[count]) / deltad;
+                        delOFdelQ2[i*numSupplyNodes+j] = (OF2 - OF) / deltad;
+                        del2OFdelQ2[i*numSupplyNodes+j][i*numSupplyNodes+j] = (delOFdelQ2[i*numSupplyNodes+j] - delOFdelQ[i*numSupplyNodes+j]) / deltad;
 
                         // use the Marquard Algorithm to condition the matrix
-                        del2OFdelQ2[count][count] += Math.Exp((iter - maxIter) * deltad);
+                        del2OFdelQ2[i*numSupplyNodes+j][i*numSupplyNodes+j] += Math.Exp((iter - 500)*deltad);
+                        //del2OFdelQ2[i * numSupplyNodes + j][i * numSupplyNodes + j] += Math.Exp(-(deltad/iter));
                         delQ2[i][j] = quant[i][j];
                         delQ1[i][j] = quant[i][j];
                         delQ12[i][j] = quant[i][j];
-
                         count++;
                     }
 
                 }
 
-                //  Determine the Change in Quantity from Supply Node i to Demand Node j
+                //  Determine the change in quantity from Demand Node i to Supply Node j 
                 //  by solving the linear set of equations [d2OFdQ2]{dQ} = {dOFdQ}
                 //  using the LinearEquationSolver Routine
-                double[] dQ = LinearEquationSolver(numNodes, del2OFdelQ2, delOFdelQ);
+                dQ = LinearEquationSolver(numNodes, del2OFdelQ2, delOFdelQ);
 
                 //The partial derivates of the Objective Function with respect to the
                 //Quantity provided from supply node j to demand node i are the
@@ -116,9 +160,9 @@ namespace HydroSense
                 //negative values.  Additional routines could be put in place to bound
                 //QuantS with maximum values also.
                 double sum = 0.0;
-                for (int i = 0; i < delOFdelQ.Length; i++)
+                for (int i = 0; i < dQ.Length; i++)
                 {
-                    sum += Math.Pow(delOFdelQ[i], 2.0);
+                    sum += dQ[i]*dQ[i];
                 }
                 double delta1 = Math.Sqrt(sum);
                 //if (delta1 > delta)
@@ -129,7 +173,8 @@ namespace HydroSense
                 {
                     for (int j = 0; j < quant[i].Length; j++)
                     {
-                        quant[i][j] += delOFdelQ[i * numSupplyNodes + j];
+                        quant[i][j] += dQ[i * numSupplyNodes + j];
+                        dQW[i][j] = dQ[i * numSupplyNodes + j];
                     }
                 }
 
@@ -139,7 +184,7 @@ namespace HydroSense
                 {
                     for (int j = 0; j < quantD[i].Length; j++)
                     {
-                        quantD[i][j] = mi.linkLosses.LinkCostOrLoss(i, j, quantD[i][j]);
+                        quantD[i][j] = mi.linkLosses.LinkCostOrLoss(i, j, quant[i][j]);
                     }
                 }
 
@@ -149,16 +194,26 @@ namespace HydroSense
                 {
                     for (int j = 0; j < quant[i].Length; j++)
                     {
-                        double val = quant[i][j];
-                        double limit = mi.linkLosses.Limit(i, j);
-                        if (val < 0)
-                            val = 0.0;
-                        if (val > limit)
-                            val = limit;
-                        quant[i][j] = val;
+                       if (quant[i][j] < mi.linkLosses.LowerLimit(i, j))
+                        {
+                            quant[i][j] = mi.linkLosses.LowerLimit(i, j);
+                        }
+                        else
+                        {
+                            if (quant[i][j] > mi.linkLosses.Limit(i, j))
+                            {
+                                quant[i][j] = mi.linkLosses.Limit(i, j);
+                            }
+                        }
                     }
                 }
-
+                for (int i = 0; i < quant.Length; i++)
+                {
+                    for (int j = 0; j < quant[i].Length; j++)
+                    {
+                        quantD[i][j] = mi.linkLosses.LinkCostOrLoss(i, j, quant[i][j]);
+                    }
+                }
                 // Determine if Demand Node Constraints are violated
                 // If they are, redistribute flows proportionally from Supplies
                 for (int i = 0; i < quantD.Length; i++)
@@ -192,7 +247,7 @@ namespace HydroSense
                     double limit = mi.supplyNodes.Limit(i);
                     if (totalS > limit)
                     {
-                        double ratio = 0.9999 * (limit / totalS);
+                        double ratio = 1.0 * (limit / totalS);
                         for (int j = 0; j < quant.Length; j++)
                         {
                             quant[j][i] *= ratio;
@@ -204,11 +259,12 @@ namespace HydroSense
                 OF = ObjectiveFunction(mi, quant);
 
                 // Adjust change in decision variables
-                delta = delta1 * dampen;
+                 delta = delta1 * dampen;
 
                 // a little output to check against Python code
                 Console.WriteLine(string.Format("k = {0}, Delta = {1}, OF = {2}", iter, delta, OF));
                 Util.PrintArrayToConsole(quant);
+                //Util.PrintArrayToConsole(dQW); 
             }
             mi.Q = quant;
         }
@@ -228,12 +284,24 @@ namespace HydroSense
             // be defined as global variables, so that only the Qs values (DVs) would
             // have to be passed to the routine.
             double rval = 0.0;
-
-
+            // 
+            // Adjust quantities to make sure they are all within
+            // the supply, demand and transportation constraints
+            //
+            for (int i = 0; i < quantities.Length; i++)
+            {
+                for (int j = 0; j < quantities[0].Length; j++)
+                {
+                    if (quantities[i][j] < m.linkLosses.LowerLimit(i, j))
+                    {
+                        quantities[i][j] = m.linkLosses.LowerLimit(i, j);
+                    }
+                }
+            }
             // Calculate total cost of water for each supply node
             for (int i = 0; i < quantities[0].Length; i++)
-            {
-                rval -= m.supplyNodes.IntegratedCost(i, Util.SumColumn(quantities, i));
+                {
+                    rval -= m.supplyNodes.IntegratedCost(i, Util.SumColumn(quantities, i));
             }
 
             // Calculate total benefits of water for each demand node and the
@@ -255,10 +323,9 @@ namespace HydroSense
 
         private double[] LinearEquationSolver(int N, double[][] C, double[] y)
         {
-            //  size is the number of rows and columns in matrix C
+            //  N is the number of demand and supply nodes
             //  y contains size values, and is the right hand vector
             //  for the linear system of equations [C]{x} = <y>
-            //
             double[] rval = new double[N];
             double[] ys = new double[N];
             int k = 0;
