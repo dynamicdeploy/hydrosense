@@ -31,7 +31,7 @@ namespace HydroSense
             return costs[i - 1] + (quantity - quantities[i - 1]) * slope;
         }
 
-        public static void PrintArrayToConsole(double[][] quant)
+        public static void PrintMatrixToConsole(double[][] quant)
         {
             for (int i = 0; i < quant.Length; i++)
             {
@@ -45,6 +45,21 @@ namespace HydroSense
                 Console.Write("]");
                 Console.WriteLine();
             }
+        }
+
+        public static void PrintArrayToConsole(double[][] quant)
+        {
+            Console.Write("[");
+            for (int i = 0; i < quant.Length; i++)
+            {
+                for (int j = 0; j < quant[i].Length; j++)
+                {
+                    Console.Write(quant[i][j]);
+                    if (i != quant.Length - 1 || j != quant[i].Length - 1)
+                        Console.Write(", ");
+                }
+            }
+            Console.WriteLine("]");
         }
 
         // taken from here:
@@ -97,5 +112,13 @@ namespace HydroSense
             }
         }
 
+        public static void PrintResultsToConsole(double OF, double[][] quantS, double[][] quantD, int iter, double delta)
+        {
+            Console.WriteLine(string.Format("k = {0}, Delta = {1}, OF = {2}", iter, delta, OF));
+            Console.Write("Supply = ");
+            Util.PrintArrayToConsole(quantS);
+            Console.Write("Demand = ");
+            Util.PrintArrayToConsole(quantD);
+        }
     }
 }
