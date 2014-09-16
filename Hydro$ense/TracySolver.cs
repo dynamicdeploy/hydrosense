@@ -17,7 +17,6 @@ namespace HydroSense
             int numNodes = numDemandNodes * numSupplyNodes;
             double[][] quant = Util.CopyArray(mi.Q);
             double[][] quantD = Util.CopyArray(mi.Q);
-            //double[][] delQ = Util.CopyArray(mi.Q);
             double[][] delQ1 = Util.CopyArray(mi.Q);
             double[][] delQ2 = Util.CopyArray(mi.Q);
             double[][] delQ12 = Util.CopyArray(mi.Q);
@@ -57,7 +56,6 @@ namespace HydroSense
                 double OF1;
                 double OF12;
                 double OF2;
-                int count = 0;
                 for (int i = 0; i < quant.Length; i++)
                 {
                     for (int j = 0; j < quant[i].Length; j++)
@@ -74,7 +72,7 @@ namespace HydroSense
                         delQ1[i][j] = quant[i][j] - deltad;
                         delQ12[i][j] = quant[i][j] - deltad;
                         OF1 = ObjectiveFunction(mi, delQ1);
-                        delOFdelQ[i*numSupplyNodes+j] = (OF - OF1) / deltad;
+                        delOFdelQ[i * numSupplyNodes + j] = (OF - OF1) / deltad;
 
                         for (int ki = 0; ki < i; ki++)
                         {
@@ -85,11 +83,11 @@ namespace HydroSense
                                 OF2 = ObjectiveFunction(mi, delQ2);
                                 OF12 = ObjectiveFunction(mi, delQ12);
                                 delOFdelQ2[ki * numSupplyNodes + kj] = (OF2 - OF12) / deltad;
-                                del2OFdelQ2[i*numSupplyNodes+j][ki * numSupplyNodes + kj] = (delOFdelQ[i*numSupplyNodes+j] - delOFdelQ2[ki * numSupplyNodes + kj]) / deltad;
+                                del2OFdelQ2[i * numSupplyNodes + j][ki * numSupplyNodes + kj] = (delOFdelQ[i * numSupplyNodes + j] - delOFdelQ2[ki * numSupplyNodes + kj]) / deltad;
                                 delQ2[ki][kj] = quant[ki][kj];
                                 delQ12[ki][kj] = quant[ki][kj];
                             }
-                            for (int kj = j+1; kj < numSupplyNodes; kj++)
+                            for (int kj = j + 1; kj < numSupplyNodes; kj++)
                             {
                                 delQ2[ki][kj] = quant[ki][kj] - deltad;
                                 delQ12[ki][kj] = quant[ki][kj] - deltad;
@@ -129,16 +127,15 @@ namespace HydroSense
                         // set the second derivative on the diagonal
                         delQ1[i][j] += 2 * deltad;
                         OF2 = ObjectiveFunction(mi, delQ1);
-                        delOFdelQ2[i*numSupplyNodes+j] = (OF2 - OF) / deltad;
-                        del2OFdelQ2[i*numSupplyNodes+j][i*numSupplyNodes+j] = (delOFdelQ2[i*numSupplyNodes+j] - delOFdelQ[i*numSupplyNodes+j]) / deltad;
+                        delOFdelQ2[i * numSupplyNodes + j] = (OF2 - OF) / deltad;
+                        del2OFdelQ2[i * numSupplyNodes + j][i * numSupplyNodes + j] = (delOFdelQ2[i * numSupplyNodes + j] - delOFdelQ[i * numSupplyNodes + j]) / deltad;
 
                         // use the Marquard Algorithm to condition the matrix
-                        del2OFdelQ2[i*numSupplyNodes+j][i*numSupplyNodes+j] += Math.Exp((iter - 500)*deltad);
+                        del2OFdelQ2[i * numSupplyNodes + j][i * numSupplyNodes + j] += Math.Exp((iter - 500) * deltad);
                         //del2OFdelQ2[i * numSupplyNodes + j][i * numSupplyNodes + j] += Math.Exp(-(deltad/iter));
                         delQ2[i][j] = quant[i][j];
                         delQ1[i][j] = quant[i][j];
                         delQ12[i][j] = quant[i][j];
-                        count++;
                     }
 
                 }
@@ -162,7 +159,7 @@ namespace HydroSense
                 double sum = 0.0;
                 for (int i = 0; i < dQ.Length; i++)
                 {
-                    sum += dQ[i]*dQ[i];
+                    sum += dQ[i] * dQ[i];
                 }
                 double delta1 = Math.Sqrt(sum);
                 //if (delta1 > delta)
@@ -194,16 +191,13 @@ namespace HydroSense
                 {
                     for (int j = 0; j < quant[i].Length; j++)
                     {
-                       if (quant[i][j] < mi.linkLosses.LowerLimit(i, j))
+                        if (quant[i][j] < mi.linkLosses.LowerLimit(i, j))
                         {
                             quant[i][j] = mi.linkLosses.LowerLimit(i, j);
                         }
-                        else
+                        if (quant[i][j] > mi.linkLosses.UpperLimit(i, j))
                         {
-                            if (quant[i][j] > mi.linkLosses.Limit(i, j))
-                            {
-                                quant[i][j] = mi.linkLosses.Limit(i, j);
-                            }
+                            quant[i][j] = mi.linkLosses.UpperLimit(i, j);
                         }
                     }
                 }
@@ -219,7 +213,7 @@ namespace HydroSense
                 for (int i = 0; i < quantD.Length; i++)
                 {
                     double totalD = Util.SumRow(quantD, i);
-                    double limit = mi.demandNodes.Limit(i);
+                    double limit = mi.demandNodes.UpperLimit(i);
                     if (totalD > limit)
                     {
                         double ratio = limit / totalD;
@@ -244,7 +238,7 @@ namespace HydroSense
                 for (int i = 0; i < quant[0].Length; i++)
                 {
                     double totalS = Util.SumColumn(quant, i);
-                    double limit = mi.supplyNodes.Limit(i);
+                    double limit = mi.supplyNodes.UpperLimit(i);
                     if (totalS > limit)
                     {
                         double ratio = 1.0 * (limit / totalS);
@@ -259,7 +253,7 @@ namespace HydroSense
                 OF = ObjectiveFunction(mi, quant);
 
                 // Adjust change in decision variables
-                 delta = delta1 * dampen;
+                delta = delta1 * dampen;
 
                 // a little output to check against Python code
                 Console.WriteLine(string.Format("k = {0}, Delta = {1}, OF = {2}", iter, delta, OF));
@@ -300,8 +294,8 @@ namespace HydroSense
             }
             // Calculate total cost of water for each supply node
             for (int i = 0; i < quantities[0].Length; i++)
-                {
-                    rval -= m.supplyNodes.IntegratedCost(i, Util.SumColumn(quantities, i));
+            {
+                rval -= m.supplyNodes.IntegratedCost(i, Util.SumColumn(quantities, i));
             }
 
             // Calculate total benefits of water for each demand node and the

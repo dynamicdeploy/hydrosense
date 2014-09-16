@@ -18,7 +18,7 @@ namespace HydroSense
             Y = value;
         }
 
-        public double Limit(int dNode, int sNode)
+        public double UpperLimit(int dNode, int sNode)
         {
             return x[dNode][sNode].Last();
         }
