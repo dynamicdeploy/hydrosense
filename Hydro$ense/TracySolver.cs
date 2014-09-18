@@ -90,8 +90,6 @@ namespace HydroSense
                             }
                             for (int kj = j + 1; kj < numSupplyNodes; kj++)
                             {
-                                if (i == 0 && j == 0 && ki == 0)
-                                    continue;
                                 delQ2[ki][kj] -= deltad;
                                 delQ12[ki][kj] -= deltad;
                                 OF2 = ObjectiveFunction(mi, delQ2, quantD);
@@ -102,7 +100,7 @@ namespace HydroSense
                                 delQ12[ki][kj] = quantS[ki][kj];
                             }
                         }
-                        for (int ki = i; ki < numDemandNodes; ki++)
+                        for (int ki = i + 1; ki < numDemandNodes; ki++)
                         {
                             for (int kj = 0; kj < j; kj++)
                             {
@@ -117,8 +115,6 @@ namespace HydroSense
                             }
                             for (int kj = j + 1; kj < numSupplyNodes; kj++)
                             {
-                                if (i == 0 && j == 0 && ki == 0)
-                                    continue;
                                 delQ2[ki][kj] -= deltad;
                                 delQ12[ki][kj] -= deltad;
                                 OF2 = ObjectiveFunction(mi, delQ2, quantD);
