@@ -21,50 +21,79 @@ namespace HydroSense
         {
         }
 
-        public void ReadFromExcel(string fileName)
+        public string ReadFromExcel(string fileName)
         {
             if (!File.Exists(fileName))
-                throw new FileNotFoundException("cannot find file: " + fileName);
+                return "Cannot find file: " + fileName;
 
-            FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+            IWorkbook wkbk;
+            try
+            {
+                FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+                wkbk = WorkbookFactory.Create(fs);
+                fs.Close();
+            }
+            catch (Exception)
+            {
+                return "Unable to open input spreadsheet. Is file open?";
+            }
 
-            IWorkbook wkbk = WorkbookFactory.Create(fs);
-            fs.Close();
+            List<string> sheets = new List<string> { "Supply Curves", "Demand Curves", "Transportation Costs", "Transportation Losses", "Initial Guess" };
 
-            ISheet sheetSupply = wkbk.GetSheet("supply curves");
-            ISheet sheetDemand = wkbk.GetSheet("demand curves");
-            ISheet sheetLinkcost = wkbk.GetSheet("transportation costs");
-            ISheet sheetLinkloss = wkbk.GetSheet("transportation losses");
-            ISheet sheetGuess = wkbk.GetSheet("initial guess");
+            string sheetsExist = CheckSheetsExist(wkbk, sheets);
+            if (sheetsExist != string.Empty)
+                return sheetsExist;
 
-            if (sheetSupply == null)
-                throw new InvalidDataException("Supply Curves worksheet not found, check spelling");
-            if (sheetDemand == null)
-                throw new InvalidDataException("Demand Curves worksheet not found, check spelling");
-            if (sheetLinkcost == null)
-                throw new InvalidDataException("Transportation Costs worksheet not found, check spelling");
-            if (sheetLinkloss == null)
-                throw new InvalidDataException("Transportation Losses worksheet not found, check spelling");
-            if (sheetGuess == null)
-                throw new InvalidDataException("Initial Guess worksheet not found, check spelling");
+            string error = string.Empty;
 
-            Nodes sNodes = ReadNodesDataFromSheet(sheetSupply);
+            Nodes sNodes = ReadNodesDataFromSheet(wkbk, "Supply Curves");
+            error = CheckEqualNumberPoints(sNodes.x, sNodes.y);
+            if (error != string.Empty)
+                return error;
             supplyNodes = new Nodes(sNodes.x, sNodes.y);
-            
-            Nodes dNodes = ReadNodesDataFromSheet(sheetDemand);
+
+            Nodes dNodes = ReadNodesDataFromSheet(wkbk, "Demand Curves");
+            error = CheckEqualNumberPoints(dNodes.x, dNodes.y);
+            if (error != string.Empty)
+                return error;
             demandNodes = new Nodes(dNodes.x, dNodes.y);
 
-            Links costs = ReadLinksDataFromSheet(sheetLinkcost);
+            Links costs = ReadLinksDataFromSheet(wkbk, "Transportation Costs");
+            error = CheckEqualNumberPoints(costs.x, costs.y);
+            if (error != string.Empty)
+                return error;
             linkCosts = new LinkCosts(costs.x, costs.y);
 
-            Links losses = ReadLinksDataFromSheet(sheetLinkloss);
+            Links losses = ReadLinksDataFromSheet(wkbk, "Transportation Losses");
+            error = CheckEqualNumberPoints(losses.x, losses.y);
+            if (error != string.Empty)
+                return error;
             linkLosses = new LinkLosses(losses.x, losses.y);
 
-            Q = ReadQuantityDataFromSheet(sheetGuess);
+            Q = ReadQuantityDataFromSheet(wkbk, "Initial Guess");
+            error = CheckEqualNumberPoints(Q);
+            if (error != string.Empty)
+                return error;
+
+            return string.Empty;
         }
 
-        private double[][] ReadQuantityDataFromSheet(ISheet sheet)
+        private string CheckSheetsExist(IWorkbook workbook, List<string> list)
         {
+            for (int i = 0; i < list.Count; i++)
+            {
+                ISheet sheet = workbook.GetSheet(list[i]);
+                if (sheet == null)
+                {
+                    return "Worksheet not found: " + list[i];
+                }
+            }
+            return string.Empty;
+        }
+
+        private double[][] ReadQuantityDataFromSheet(IWorkbook workbook, string sheetname)
+        {
+            ISheet sheet = workbook.GetSheet(sheetname);
             int rowCount = GetRowCount(sheet);
             double[][] rval = new double[rowCount][];
 
@@ -80,12 +109,12 @@ namespace HydroSense
                 }
             }
 
-            CheckEqualNumberPoints(rval);
             return rval;
         }
 
-        private Links ReadLinksDataFromSheet(ISheet sheet)
+        private Links ReadLinksDataFromSheet(IWorkbook workbook, string sheetname)
         {
+            ISheet sheet = workbook.GetSheet(sheetname);
             int rowCount = GetRowCount(sheet);
             int numDemands = Convert.ToInt32(sheet.GetRow(rowCount - 1).GetCell(0).NumericCellValue);
             
@@ -132,14 +161,14 @@ namespace HydroSense
                     } 
                 }
             }
-            CheckEqualNumberPoints(x, y);
             return new Links(x, y);
         }
 
        
 
-        private Nodes ReadNodesDataFromSheet(ISheet sheet)
+        private Nodes ReadNodesDataFromSheet(IWorkbook workbook, string sheetname)
         {
+            ISheet sheet = workbook.GetSheet(sheetname);
             int rowCount = GetRowCount(sheet);
             double[][] x = new double[rowCount / 2][];
             double[][] y = new double[rowCount / 2][];
@@ -173,7 +202,6 @@ namespace HydroSense
                     } 
                 }
             }
-            CheckEqualNumberPoints(x, y);
             return new Nodes(x, y);
         }
 
@@ -226,16 +254,17 @@ namespace HydroSense
         /// I used a jagged array because they are supposed to be faster
         /// </summary>
         /// <param name="q"></param>
-        private void CheckEqualNumberPoints(double[][] q)
+        private string CheckEqualNumberPoints(double[][] q)
         {
             int numPoints = q[0].Length;
             for (int i = 0; i < q.Length; i++)
             {
                 if (q[i].Length != numPoints)
                 {
-                    throw new DataMisalignedException("must have an initial guess for every demand/supply, set it to zero if there is no relationship");
+                    return "must have an initial guess for every demand/supply, set it to zero if there is no relationship";
                 }
             }
+            return string.Empty;
         }
 
         /// <summary>
@@ -243,20 +272,21 @@ namespace HydroSense
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        private void CheckEqualNumberPoints(double[][] x, double[][] y)
+        private string CheckEqualNumberPoints(double[][] x, double[][] y)
         {
             if (x.Length != y.Length)
             {
-                throw new DataMisalignedException("must have a quantity/cost relationship for each node, check inputs");
+                return "must have a quantity/cost relationship for each node, check inputs";
             }
 
             for (int i = 0; i < x.Length; i++)
             {
                 if (x[i].Length != y[i].Length)
                 {
-                    throw new DataMisalignedException("must have the same number of quantity/cost points for each node, check inputs");
+                    return "must have the same number of quantity/cost points for each node, check inputs";
                 }
             }
+            return string.Empty;
         }
 
         /// <summary>
@@ -264,28 +294,29 @@ namespace HydroSense
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        private void CheckEqualNumberPoints(double[][][] x, double[][][] y)
+        private string CheckEqualNumberPoints(double[][][] x, double[][][] y)
         {
             if (x.Length != y.Length)
             {
-                throw new DataMisalignedException("must have the same number of quantity/cost nodes, check inputs");
+                return "must have the same number of quantity/cost nodes, check inputs";
             }
 
             for (int i = 0; i < x.Length; i++)
             {
                 if (x[i].Length != y[i].Length)
                 {
-                    throw new DataMisalignedException("must have a quantity/cost relationship for each node, check inputs");
+                    return "must have a quantity/cost relationship for each node, check inputs";
                 }
 
                 for (int j = 0; j < x[i].Length; j++)
                 {
                     if (x[i][j].Length != y[i][j].Length)
                     {
-                        throw new DataMisalignedException("must have the same number of quantity/cost points for each node, check inputs");
+                        return "must have the same number of quantity/cost points for each node, check inputs";
                     }
                 }
             }
+            return string.Empty;
         }
 
         public void ReadHardcoded()

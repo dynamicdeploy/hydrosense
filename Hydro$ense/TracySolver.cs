@@ -16,12 +16,12 @@ namespace HydroSense
             this.mi = mi;
         }
 
-        internal void Solve(int maxIterations, double tolerance)
+        internal void Solve(int maxIterations, double tolerance, double derivativeInc)
         {
             int iter = 0;
             int maxIter = maxIterations;
             double delta = 1000;
-            double deltad = 0.01;
+            double deltad = derivativeInc;
             double tol = tolerance;
             int numDemandNodes = mi.Q.Length;
             int numSupplyNodes = mi.Q[0].Length;

@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Windows Desktop
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hydro$ense", "Hydro$ense\Hydro$ense.csproj", "{92156483-B270-4054-87E6-CDFE0711D8E0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{4E819DFF-69AE-420D-AEA9-B2668FD76D14}"
@@ -10,16 +10,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{4E819D
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Hydro$enseSetup", "Hydro$enseSetup\Hydro$enseSetup.wixproj", "{B9FFB07B-5AD7-4E8A-8A10-6A4443248DDF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{92156483-B270-4054-87E6-CDFE0711D8E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{92156483-B270-4054-87E6-CDFE0711D8E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{92156483-B270-4054-87E6-CDFE0711D8E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{92156483-B270-4054-87E6-CDFE0711D8E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92156483-B270-4054-87E6-CDFE0711D8E0}.Debug|x86.ActiveCfg = Debug|x86
+		{92156483-B270-4054-87E6-CDFE0711D8E0}.Debug|x86.Build.0 = Debug|x86
+		{92156483-B270-4054-87E6-CDFE0711D8E0}.Release|x86.ActiveCfg = Release|x86
+		{92156483-B270-4054-87E6-CDFE0711D8E0}.Release|x86.Build.0 = Release|x86
+		{B9FFB07B-5AD7-4E8A-8A10-6A4443248DDF}.Debug|x86.ActiveCfg = Debug|x86
+		{B9FFB07B-5AD7-4E8A-8A10-6A4443248DDF}.Release|x86.ActiveCfg = Release|x86
+		{B9FFB07B-5AD7-4E8A-8A10-6A4443248DDF}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

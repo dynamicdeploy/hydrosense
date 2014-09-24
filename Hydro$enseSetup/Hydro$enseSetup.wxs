@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define ProductName="$(fileVersion.ProductName($(var.Hydro$ense.TargetPath)))"?>
+  <?define ProductVersion="$(fileVersion.ProductVersion($(var.Hydro$ense.TargetPath)))"?>
+	<Product Id="*" 
+           Name="$(var.ProductName) $(var.ProductVersion)" 
+           Language="1033" 
+           Version="$(var.ProductVersion)"
+           Manufacturer="$(var.ProductName)"
+           UpgradeCode="7598f632-5aca-41d6-b1b6-834db4ef0e04">
+    
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+    <!--Ensure that .net 3.5 is installed-->
+    <PropertyRef Id="NETFRAMEWORK35"/>
+    <Condition Message="This application requires .NET Framework 3.5. Please install the .NET Framework then run this installer again.">
+      <![CDATA[Installed OR NETFRAMEWORK35]]>
+    </Condition>
+
+    <!--Upgrade stuff and embed cab file into msi-->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of $(var.ProductName) is already installed." />
+    <MediaTemplate EmbedCab="yes"/>
+
+    <!--Property to conditionally install desktop shortcut-->
+    <Property Id="INSTALLDESKTOPSHORTCUT" Value="1"/>
+
+    <!--Set Icon and Add/Remove Programs Icon-->
+    <Icon Id="Icon" SourceFile="$(var.Hydro$ense.ProjectDir)Hydro$ense.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="Icon"/>
+
+    <!--Directories where we will put stuff-->
+    <SetDirectory Id="WINDOWSVOLUME" Value="[WindowsVolume]"/>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!--Install folder-->
+      <Directory Id="WINDOWSVOLUME">
+        <?if $(sys.BUILDARCH)=x64?>
+        <Directory Id="ProgramFiles64Folder">
+          <?else?>
+          <Directory Id="ProgramFilesFolder">
+            <?endif?>
+            <Directory Id="INSTALLDIR" Name="Hydro$ense">
+              <Directory Id="FilesDir" Name="$(var.ProductName) $(var.ProductVersion)"/>
+            </Directory>
+            <?if $(sys.BUILDARCH)=x64?>
+          </Directory>
+          <?else?>
+        </Directory>
+        <?endif?>
+      </Directory>
+
+      <!--Start menu folder-->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ProgramMenuSubfolder" Name="Hydro$ense"/>
+      </Directory>
+
+      <!--Desktop folder-->
+      <Directory Id="DesktopFolder"/>
+    </Directory>
+
+    <!--Start menu shortcut-->
+    <DirectoryRef Id="ProgramMenuSubfolder">
+      <Component Id="HydroSenseShortcut">
+        <Shortcut Id="StartMenuShortcut"
+                  Name="$(var.ProductName) $(var.ProductVersion)"
+                  Directory="ProgramMenuSubfolder"
+                  Description="Hydro-Economic Net Benefit Maximizer"
+                  Target="[FilesDir]$(var.Hydro$ense.TargetFileName)"
+                  WorkingDirectory="FilesDir"
+                  Icon="Icon">
+        </Shortcut>
+        <RegistryValue Root="HKCU"
+                       Key="Software\Hydro$sense\$(var.ProductName) $(var.ProductVersion)"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes">
+        </RegistryValue>
+        <RemoveFolder Id="HydroSenseShortcut" On="uninstall"/>
+      </Component>
+    </DirectoryRef>
+
+    <!--Desktop shortcut-->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="HydroSenseShortcutDesktop">
+        <Condition>INSTALLDESKTOPSHORTCUT</Condition>
+        <Shortcut Id="HydroSenseDesktopShortcut"
+                  Name="$(var.ProductName) $(var.ProductVersion)"
+                  Description="Hydro-Economic Net Benefit Maximizer"
+                  Target="[FilesDir]$(var.Hydro$ense.TargetFileName)"
+                  WorkingDirectory="FilesDir"
+                  Icon="Icon">
+        </Shortcut>
+        <RegistryValue Root="HKCU"
+                       Key="Software\Hydro$ense\DesktopShortcut\$(var.ProductName) $(var.ProductVersion)"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes">
+        </RegistryValue>
+        <RemoveFolder Id="HydroSenseShortcutDesktop" On="uninstall"/>
+      </Component>
+    </DirectoryRef>
+
+    <!--Required files and libraries-->
+    <ComponentGroup Id="HydroSenseComponents" Directory="FilesDir">
+      <!--Main projects required by Hydro$ense-->
+      <Component Id="HydroSense">
+        <File Source="$(var.Hydro$ense.TargetPath)"/>
+      </Component>
+      <!--Additional files-->
+      <Component Id="License">
+        <File Source="$(var.SolutionDir)License.rtf"/>
+      </Component>
+      <Component Id="InputExample">
+        <File Source="$(var.SolutionDir)ModelInput.xlsx"/>
+      </Component>
+      <Component Id="SharpZipLib">
+        <File Source="$(var.Hydro$ense.TargetDir)ICSharpCode.SharpZipLib.dll"/>
+      </Component>
+      <Component Id="NPOI">
+        <File Source="$(var.Hydro$ense.TargetDir)NPOI.dll"/>
+      </Component>
+      <Component Id="NPOI_OOXML">
+        <File Source="$(var.Hydro$ense.TargetDir)NPOI.OOXML.dll"/>
+      </Component>
+      <Component Id="NPOI_OpenXml4net">
+        <File Source="$(var.Hydro$ense.TargetDir)NPOI.OpenXml4Net.dll"/>
+      </Component>
+      <Component Id="NPOI_OpenXmlFormats">
+        <File Source="$(var.Hydro$ense.TargetDir)NPOI.OpenXmlFormats.dll"/>
+      </Component>
+    </ComponentGroup>
+
+    <!--UI Installer Configuration-->
+    <Property Id="WIXUI_INSTALLDIR" Value="FilesDir"/>
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SolutionDir)License.rtf"/>
+    <UI Id="Hydro$enseInstallerUI">
+      <UIRef Id="Custom_WixUI_InstallDir"/>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">2</Publish>
+      <Publish Dialog="Custom_InstallDirDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">3</Publish>
+    </UI>
+
+    <!--Add all components to Hydro$ense-->
+    <Feature Id="HydroSenseFeature" Title="HydroSenseSetup" Level="1">
+      <ComponentGroupRef Id="HydroSenseComponents" />
+      <ComponentRef Id="HydroSenseShortcut"/>
+      <ComponentRef Id="HydroSenseShortcutDesktop"/>
+    </Feature>
+    
+	</Product>
+</Wix>
