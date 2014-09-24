@@ -31,35 +31,35 @@ namespace HydroSense
             return costs[i - 1] + (quantity - quantities[i - 1]) * slope;
         }
 
-        public static void PrintMatrixToConsole(double[][] quant)
+        public static void WriteMatrixToLog(StringBuilder log, double[][] quant)
         {
             for (int i = 0; i < quant.Length; i++)
             {
-                Console.Write("[");
+                log.Append("[");
                 for (int j = 0; j < quant[i].Length; j++)
                 {
-                    Console.Write(quant[i][j]);
+                    log.Append(quant[i][j]);
                     if (j < quant[i].Length - 1)
-                        Console.Write(", ");
+                        log.Append(", ");
                 }
-                Console.Write("]");
-                Console.WriteLine();
+                log.Append("]");
+                log.AppendLine();
             }
         }
 
-        public static void PrintArrayToConsole(double[][] quant)
+        public static void WriteArrayToLog(StringBuilder log, double[][] quant)
         {
-            Console.Write("[");
+            log.Append("[");
             for (int i = 0; i < quant.Length; i++)
             {
                 for (int j = 0; j < quant[i].Length; j++)
                 {
-                    Console.Write(quant[i][j]);
+                    log.Append(quant[i][j]);
                     if (i != quant.Length - 1 || j != quant[i].Length - 1)
-                        Console.Write(", ");
+                        log.Append(", ");
                 }
             }
-            Console.WriteLine("]");
+            log.AppendLine("]");
         }
 
         // taken from here:
@@ -112,13 +112,23 @@ namespace HydroSense
             }
         }
 
-        public static void PrintResultsToConsole(double OF, double[][] quantS, double[][] quantD, int iter, double delta)
+        public static void WriteResultsToLog(StringBuilder log, double OF, double[][] quantS, double[][] quantD, int iter, double delta)
         {
-            Console.WriteLine(string.Format("k = {0}, Delta = {1}, OF = {2}", iter, delta, OF));
-            Console.Write("Supply = ");
-            Util.PrintArrayToConsole(quantS);
-            Console.Write("Demand = ");
-            Util.PrintArrayToConsole(quantD);
+            log.AppendLine(string.Format("k = {0}, Delta = {1}, OF = {2}", iter, delta, OF));
+            log.Append("Supply = ");
+            Util.WriteArrayToLog(log, quantS);
+            log.Append("Demand = ");
+            Util.WriteArrayToLog(log, quantD);
+        }
+
+        public static T[] ToFlat<T>(this T[][] jagged)
+        {
+            return jagged.SelectMany(innerInner => innerInner).ToArray();
+        }
+
+        public static T[] ToFlat<T>(this T[][][] jagged)
+        {
+            return jagged.SelectMany(inner => inner.SelectMany(innerInner => innerInner)).ToArray();
         }
     }
 }
