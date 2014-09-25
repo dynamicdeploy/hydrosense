@@ -56,6 +56,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxDeltaD = new System.Windows.Forms.TextBox();
             this.buttonDefault = new System.Windows.Forms.Button();
+            this.Readme = new System.Windows.Forms.TabPage();
+            this.richTextBoxReadme = new System.Windows.Forms.RichTextBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -63,6 +65,7 @@
             this.Run.SuspendLayout();
             this.Advanced.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
+            this.Readme.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -284,6 +287,7 @@
             this.tableLayoutPanel2.SetColumnSpan(this.tabControl1, 3);
             this.tabControl1.Controls.Add(this.Run);
             this.tabControl1.Controls.Add(this.Advanced);
+            this.tabControl1.Controls.Add(this.Readme);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(3, 3);
             this.tabControl1.Name = "tabControl1";
@@ -364,6 +368,26 @@
             this.buttonDefault.UseVisualStyleBackColor = true;
             this.buttonDefault.Click += new System.EventHandler(this.buttonDefault_Click);
             // 
+            // Readme
+            // 
+            this.Readme.Controls.Add(this.richTextBoxReadme);
+            this.Readme.Location = new System.Drawing.Point(4, 22);
+            this.Readme.Name = "Readme";
+            this.Readme.Size = new System.Drawing.Size(570, 268);
+            this.Readme.TabIndex = 2;
+            this.Readme.Text = "Readme";
+            this.Readme.UseVisualStyleBackColor = true;
+            // 
+            // richTextBoxReadme
+            // 
+            this.richTextBoxReadme.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.richTextBoxReadme.Location = new System.Drawing.Point(0, 0);
+            this.richTextBoxReadme.Name = "richTextBoxReadme";
+            this.richTextBoxReadme.ReadOnly = true;
+            this.richTextBoxReadme.Size = new System.Drawing.Size(570, 268);
+            this.richTextBoxReadme.TabIndex = 0;
+            this.richTextBoxReadme.Text = "";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -386,6 +410,7 @@
             this.Advanced.ResumeLayout(false);
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel3.PerformLayout();
+            this.Readme.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -420,6 +445,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBoxDeltaD;
         private System.Windows.Forms.Button buttonDefault;
+        private System.Windows.Forms.TabPage Readme;
+        private System.Windows.Forms.RichTextBox richTextBoxReadme;
 
     }
 }

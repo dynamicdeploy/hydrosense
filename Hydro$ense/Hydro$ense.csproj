@@ -73,6 +73,14 @@
   <PropertyGroup>
     <ApplicationIcon>Hydro%24ense.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- Pandoc Output dir: -->
+    <PandocOutputDir Condition="$(PandocOutputDir) == ''">%(RelativeDir)$(OutputPath)</PandocOutputDir>
+    <!-- Pandoc Output format: rtf -->
+    <PandocOutputFormat Condition="$(PandocOutputFormat) == ''">rtf</PandocOutputFormat>
+    <!-- Exclude table of contents -->
+    <PandocTableOfContents Condition="$(PandocTableOfContents) == ''">false</PandocTableOfContents>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
@@ -140,6 +148,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Pandoc Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -161,6 +170,16 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Import Project="..\packages\PandocTasks.0.1.1\build\PandocTasks.targets" Condition="Exists('..\packages\PandocTasks.0.1.1\build\PandocTasks.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\PandocTasks.0.1.1\build\PandocTasks.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\PandocTasks.0.1.1\build\PandocTasks.targets'))" />
+  </Target>
+  <PropertyGroup>
+    <PreBuildEvent>copy "$(SolutionDir)README.md" "$(ProjectDir)"</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

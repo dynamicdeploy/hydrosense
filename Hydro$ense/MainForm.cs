@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Text;
 using System.Windows.Forms;
 
 namespace HydroSense
@@ -21,6 +22,7 @@ namespace HydroSense
             m_maxIter = Convert.ToInt32(textBoxMaxIter.Text);
             m_tolerance = Convert.ToDouble(textBoxTolerance.Text);
             m_deltad = Convert.ToDouble(textBoxDeltaD.Text);
+            richTextBoxReadme.Rtf = File.ReadAllText("README.rtf");
         }
 
         private void buttonInput_Click(object sender, System.EventArgs e)
@@ -167,17 +169,17 @@ namespace HydroSense
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabControl1.SelectedTab == tabControl1.TabPages["Advanced"])
-            {
-                buttonViewLog.Visible = false;
-                buttonQuit.Visible = false;
-                buttonRun.Visible = false;
-            }
-            else
+            if (tabControl1.SelectedTab == tabControl1.TabPages["Run"])
             {
                 buttonViewLog.Visible = true;
                 buttonQuit.Visible = true;
                 buttonRun.Visible = true;
+            }
+            else
+            {
+                buttonViewLog.Visible = false;
+                buttonQuit.Visible = false;
+                buttonRun.Visible = false;
             }
         }
         

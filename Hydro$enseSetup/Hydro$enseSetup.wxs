@@ -111,6 +111,9 @@
       <Component Id="License">
         <File Source="$(var.SolutionDir)License.rtf"/>
       </Component>
+      <Component Id="Readme">
+        <File Source="$(var.Hydro$ense.TargetDir)README.rtf"/>
+      </Component>
       <Component Id="InputExample">
         <File Source="$(var.SolutionDir)ModelInput.xlsx"/>
       </Component>
