@@ -22,7 +22,10 @@ namespace HydroSense
             m_maxIter = Convert.ToInt32(textBoxMaxIter.Text);
             m_tolerance = Convert.ToDouble(textBoxTolerance.Text);
             m_deltad = Convert.ToDouble(textBoxDeltaD.Text);
-            richTextBoxReadme.Rtf = File.ReadAllText("README.rtf");
+            if (File.Exists("README.rtf"))
+                richTextBoxReadme.Rtf = File.ReadAllText("README.rtf");
+            else
+                richTextBoxReadme.Text = "Error loading README file";
         }
 
         private void buttonInput_Click(object sender, System.EventArgs e)
