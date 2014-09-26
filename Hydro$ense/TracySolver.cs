@@ -31,7 +31,6 @@ namespace HydroSense
             double[][] delQ1 = Util.CopyArray(mi.Q);
             double[][] delQ2 = Util.CopyArray(mi.Q);
             double[][] delQ12 = Util.CopyArray(mi.Q);
-            double[][] dQW = Util.CopyArray(mi.Q);
             double[][] delOFdelQ = new double[numDemandNodes][];
             double[][] delOFdelQ2 = new double[numDemandNodes][];
             double[][] del2OFdelQ2 = new double[numNodes][];
@@ -126,7 +125,6 @@ namespace HydroSense
                     for (int j = 0; j < quantS[i].Length; j++)
                     {
                         quantS[i][j] += dQ[i * numSupplyNodes + j];
-                        dQW[i][j] = dQ[i * numSupplyNodes + j];
                     }
                 }
 
@@ -143,10 +141,6 @@ namespace HydroSense
 
                 /* Adjust change in decision variables */
                 delta = Math.Sqrt(sum);
-
-                /* Adjust quantities to make sure they are all within
-                 * the supply, demand, and transportation constraints */
-                CheckConstraints(mi, quantS, quantD);
 
                 /* Calculate new objective function */
                 OF = ObjectiveFunction(mi, quantS, quantD);
