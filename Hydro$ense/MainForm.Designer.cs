@@ -234,11 +234,11 @@
             // 
             // openFileDialogInput
             // 
-            this.openFileDialogInput.Filter = "Excel file (*.xls(x))|*.xls;*.xlsx|All files (*.*)|*.*";
+            this.openFileDialogInput.Filter = "Excel file|*.xlsx;*.xls|All files (*.*)|*.*";
             // 
             // saveFileDialogExcel
             // 
-            this.saveFileDialogExcel.Filter = "Excel file (*.xls(x))|*.xls;*.xlsx|All files (*.*)|*.*";
+            this.saveFileDialogExcel.Filter = "Excel file|*.xlsx;*.xls|All files (*.*)|*.*";
             // 
             // statusStrip
             // 

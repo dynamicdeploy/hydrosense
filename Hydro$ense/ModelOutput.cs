@@ -11,30 +11,51 @@ namespace HydroSense
 {
     class ModelOutput
     {
-        private double[][] m_Q;
+        private double[][] m_quantS;
+        private double[][] m_quantD;
+        private double m_netBenefit;
 
-        public ModelOutput(ModelInput mi)
+        public ModelOutput(double[][] supplyQuantity, double[][] demandQuantity, double netBenefit)
         {
-            m_Q = Util.CopyArray(mi.Q);
+            m_quantS = supplyQuantity;
+            m_quantD = demandQuantity;
+            m_netBenefit = netBenefit;
         }
 
         internal void ToExcel(string fileName)
         {
             IWorkbook wkbk = GetWorkbook(fileName);
-            ISheet quantity = GetOrCreateSheet(wkbk, "Quantity Delivered");
-
-            for (int i = 0; i < m_Q.Length; i++)
-            {
-                IRow row = quantity.CreateRow(i);
-                for (int j = 0; j < m_Q[i].Length; j++)
-                {
-                    row.CreateCell(j).SetCellValue(m_Q[i][j]);
-                }
-            }
+            WriteToSheet(wkbk, "Maximum Net Benefit", m_netBenefit);
+            WriteToSheet(wkbk, "Optimal Supply", m_quantS);
+            WriteToSheet(wkbk, "Optimal Delivery", m_quantD);
 
             FileStream fs = new FileStream(fileName, FileMode.Create, FileAccess.ReadWrite);
             wkbk.Write(fs);
             fs.Close();
+        }
+
+        private void WriteToSheet(IWorkbook wkbk, string sheetname, double netBenefit)
+        {
+            ISheet sheet = GetOrCreateSheet(wkbk, sheetname);
+            IRow row;
+            row = sheet.CreateRow(0);
+            row.CreateCell(0).SetCellValue("Total benefits of water use minus the total cost of water supply and delivery");
+            row = sheet.CreateRow(1);
+            row.CreateCell(0).SetCellValue(netBenefit);
+        }
+
+        private void WriteToSheet(IWorkbook wkbk, string sheetname, double[][] quantities)
+        {
+            ISheet sheet = GetOrCreateSheet(wkbk, sheetname);
+
+            for (int i = 0; i < quantities.Length; i++)
+            {
+                IRow row = sheet.CreateRow(i);
+                for (int j = 0; j < quantities[i].Length; j++)
+                {
+                    row.CreateCell(j).SetCellValue(quantities[i][j]);
+                }
+            }
         }
 
         private IWorkbook GetWorkbook(string fileName)

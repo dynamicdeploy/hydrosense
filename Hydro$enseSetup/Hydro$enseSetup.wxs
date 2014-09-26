@@ -115,7 +115,7 @@
         <File Source="$(var.Hydro$ense.TargetDir)README.rtf"/>
       </Component>
       <Component Id="InputExample">
-        <File Source="$(var.SolutionDir)ModelInput.xlsx"/>
+        <File Source="$(var.SolutionDir)ExampleProblem.xlsx"/>
       </Component>
       <Component Id="SharpZipLib">
         <File Source="$(var.Hydro$ense.TargetDir)ICSharpCode.SharpZipLib.dll"/>

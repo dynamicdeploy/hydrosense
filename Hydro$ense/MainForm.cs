@@ -93,9 +93,7 @@ namespace HydroSense
             }
 
             m_solver = new TracySolver(mi);
-            m_solver.Solve(m_maxIter, m_tolerance, m_deltad);
-
-            ModelOutput mOut = new ModelOutput(mi);
+            ModelOutput mOut = m_solver.Solve(m_maxIter, m_tolerance, m_deltad);
             mOut.ToExcel(m_outputExcel);
 
             sw.Stop();

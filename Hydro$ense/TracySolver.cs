@@ -16,7 +16,7 @@ namespace HydroSense
             this.mi = mi;
         }
 
-        internal void Solve(int maxIterations, double tolerance, double derivativeInc)
+        internal ModelOutput Solve(int maxIterations, double tolerance, double derivativeInc)
         {
             int iter = 0;
             int maxIter = maxIterations;
@@ -136,7 +136,8 @@ namespace HydroSense
                 double sum = 0.0;
                 for (int i = 0; i < dQ.Length; i++)
                 {
-                    sum += dQ[i] * dQ[i];
+                    if (dQ[i] > 0)
+                        sum += dQ[i] * dQ[i];
                 }
 
                 /* Adjust change in decision variables */
@@ -151,7 +152,7 @@ namespace HydroSense
                 if (iter == maxIter)
                     log.AppendLine("Solver reached max iterations, solution may not be valid.");
             }
-            mi.Q = quantS;
+            return new ModelOutput(quantS, quantD, OF);
         }
 
         /// <summary>
