@@ -119,7 +119,9 @@ namespace HydroSense
                  *  by solving the linear set of equations [d2OFdQ2]{dQ} = {dOFdQ}
                  *  using the LinearEquationSolver Routine */
                 double[] dOFdQ = Util.ToFlat(delOFdelQ);
-                double[] dQ = LinearEquationSolver(numNodes, del2OFdelQ2, dOFdQ);
+                //double[] dQ = LinearEquationSolver(numNodes, del2OFdelQ2, dOFdQ);
+                int[] p = Util.LUPDecomposition(del2OFdelQ2);
+                double[] dQ = Util.LUPSolve(del2OFdelQ2, p, dOFdQ);
                 for (int i = 0; i < quantS.Length; i++)
                 {
                     for (int j = 0; j < quantS[i].Length; j++)
@@ -136,8 +138,7 @@ namespace HydroSense
                 double sum = 0.0;
                 for (int i = 0; i < dQ.Length; i++)
                 {
-                    if (dQ[i] > 0)
-                        sum += dQ[i] * dQ[i];
+                    sum += dQ[i] * dQ[i];
                 }
 
                 /* Adjust change in decision variables */
