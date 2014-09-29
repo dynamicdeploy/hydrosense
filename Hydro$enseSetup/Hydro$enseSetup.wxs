@@ -6,7 +6,7 @@
            Name="$(var.ProductName) $(var.ProductVersion)" 
            Language="1033" 
            Version="$(var.ProductVersion)"
-           Manufacturer="$(var.ProductName)"
+           Manufacturer="Bureau of Reclamation / Idaho Water Resources Research Institute"
            UpgradeCode="7598f632-5aca-41d6-b1b6-834db4ef0e04">
     
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
@@ -17,8 +17,7 @@
       <![CDATA[Installed OR NETFRAMEWORK35]]>
     </Condition>
 
-    <!--Upgrade stuff and embed cab file into msi-->
-    <MajorUpgrade DowngradeErrorMessage="A newer version of $(var.ProductName) is already installed." />
+    <!--Embed cab file into msi-->
     <MediaTemplate EmbedCab="yes"/>
 
     <!--Property to conditionally install desktop shortcut-->
