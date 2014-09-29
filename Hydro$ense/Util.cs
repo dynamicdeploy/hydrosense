@@ -144,7 +144,7 @@ namespace HydroSense
          * Reference: Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and Clifford Stein. 
          * Introduction To Algorithms Third Edition. The MIT Press, 2009.
          */
-        public static int[] LUPDecomposition(double[][] A)
+        public static int[] LUPDecomposition(ref double[][] A)
         {
             int n = A.Length - 1;
             /*
