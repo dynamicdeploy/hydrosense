@@ -8,11 +8,15 @@ namespace HydroSense
     class TracySolver
     {
         public StringBuilder log { get; private set; }
+        private int nDemNodes;
+        private int nSupNodes;
         private ModelInput mi;
         
         public TracySolver(ModelInput mi)
         {
             log = new StringBuilder();
+            nDemNodes = mi.Q.Length;
+            nSupNodes = mi.Q[0].Length;
             this.mi = mi;
         }
 
@@ -23,26 +27,23 @@ namespace HydroSense
             double delta = 1000;
             double deltad = derivativeInc;
             double tol = tolerance;
-            int numDemandNodes = mi.Q.Length;
-            int numSupplyNodes = mi.Q[0].Length;
-            int numNodes = numDemandNodes * numSupplyNodes;
             double[][] quantS = Util.CopyArray(mi.Q);
             double[][] quantD = Util.CopyArray(mi.Q);
             double[][] delQ1 = Util.CopyArray(mi.Q);
             double[][] delQ2 = Util.CopyArray(mi.Q);
             double[][] delQ12 = Util.CopyArray(mi.Q);
-            double[][] delOFdelQ = new double[numDemandNodes][];
-            double[][] delOFdelQ2 = new double[numDemandNodes][];
-            double[][] del2OFdelQ2 = new double[numNodes][];
-            Util.InitializeArrayToZero(delOFdelQ, numDemandNodes, numSupplyNodes);
-            Util.InitializeArrayToZero(delOFdelQ2, numDemandNodes, numSupplyNodes);
-            Util.InitializeArrayToZero(del2OFdelQ2, numNodes, numNodes);
+            double[][] delOFdelQ = new double[nDemNodes][];
+            double[][] delOFdelQ2 = new double[nDemNodes][];
+            double[][] del2OFdelQ2 = new double[nDemNodes * nSupNodes][];
+            Util.InitializeArrayToZero(delOFdelQ, nDemNodes, nSupNodes);
+            Util.InitializeArrayToZero(delOFdelQ2, nDemNodes, nSupNodes);
+            Util.InitializeArrayToZero(del2OFdelQ2, nDemNodes * nSupNodes, nDemNodes * nSupNodes);
 
             /* Initial Guess of Quantity delivered to the Demand nodes
              * by adjusting for transportation losses from the supply nodes.*/
-            for (int i = 0; i < quantD.Length; i++)
+            for (int i = 0; i < nDemNodes; i++)
             {
-                for (int j = 0; j < quantD[i].Length; j++)
+                for (int j = 0; j < nSupNodes; j++)
                 {
                     quantD[i][j] = mi.linkLosses.LinkCostOrLoss(i, j, quantS[i][j]);
                 }
@@ -74,18 +75,18 @@ namespace HydroSense
                  *   the integral of the marginal cost functions from zero to the Quantity
                  *   provided from supply node j to demand node i. The DVs are the array 
                  *   of quantity from supply node j to demand node i */
-                for (int i = 0; i < quantS.Length; i++)
+                for (int i = 0; i < nDemNodes; i++)
                 {
-                    for (int j = 0; j < quantS[i].Length; j++)
+                    for (int j = 0; j < nSupNodes; j++)
                     {
                         delQ1[i][j] -= deltad;
                         delQ12[i][j] -= deltad;
                         OF1 = ObjectiveFunction(mi, delQ1, quantD);
                         delOFdelQ[i][j] = (OF - OF1) / deltad;
 
-                        for (int ii = 0; ii < quantS.Length; ii++)
+                        for (int ii = 0; ii < nDemNodes; ii++)
                         {
-                            for (int jj = 0; jj < quantS[i].Length; jj++)
+                            for (int jj = 0; jj < nSupNodes; jj++)
                             {
                                 if (ii == i && jj == j)
                                     continue;
@@ -94,7 +95,7 @@ namespace HydroSense
                                 OF2 = ObjectiveFunction(mi, delQ2, quantD);
                                 OF12 = ObjectiveFunction(mi, delQ12, quantD);
                                 delOFdelQ2[ii][jj] = (OF2 - OF12) / deltad;
-                                del2OFdelQ2[i * numSupplyNodes + j][ii * numSupplyNodes + jj] = (delOFdelQ[i][j] - delOFdelQ2[ii][jj]) / deltad;
+                                del2OFdelQ2[i * nSupNodes + j][ii * nSupNodes + jj] = (delOFdelQ[i][j] - delOFdelQ2[ii][jj]) / deltad;
                                 delQ2[ii][jj] = quantS[ii][jj];
                                 delQ12[ii][jj] = quantS[ii][jj];
                             }
@@ -104,10 +105,10 @@ namespace HydroSense
                         delQ1[i][j] += 2 * deltad;
                         OF2 = ObjectiveFunction(mi, delQ1, quantD);
                         delOFdelQ2[i][j] = (OF2 - OF) / deltad;
-                        del2OFdelQ2[i * numSupplyNodes + j][i * numSupplyNodes + j] = (delOFdelQ2[i][j] - delOFdelQ[i][j]) / deltad;
+                        del2OFdelQ2[i * nSupNodes + j][i * nSupNodes + j] = (delOFdelQ2[i][j] - delOFdelQ[i][j]) / deltad;
 
                         /* use the Marquard Algorithm to condition the matrix */
-                        del2OFdelQ2[i * numSupplyNodes + j][i * numSupplyNodes + j] += Math.Exp((iter - 500) * deltad);
+                        del2OFdelQ2[i * nSupNodes + j][i * nSupNodes + j] += Math.Exp((iter - 500) * deltad);
                         delQ2[i][j] = quantS[i][j];
                         delQ1[i][j] = quantS[i][j];
                         delQ12[i][j] = quantS[i][j];
@@ -119,11 +120,11 @@ namespace HydroSense
                  *  by solving the linear set of equations [del2OFdelQ2]{dQ} = {delOFdelQ}
                  *  using LUP Decomposition */
                 double[] dQ = Util.LUPSolve(ref del2OFdelQ2, Util.ToFlat(delOFdelQ));
-                for (int i = 0; i < quantS.Length; i++)
+                for (int i = 0; i < nDemNodes; i++)
                 {
-                    for (int j = 0; j < quantS[i].Length; j++)
+                    for (int j = 0; j < nSupNodes; j++)
                     {
-                        quantS[i][j] += dQ[i * numSupplyNodes + j];
+                        quantS[i][j] += dQ[i * nSupNodes + j];
                     }
                 }
 
@@ -164,9 +165,9 @@ namespace HydroSense
         {
             /* Determine the Quantity delivered to the Demand nodes by adjusting
              * for transportation losses from the supply nodes. */
-            for (int i = 0; i < quantD.Length; i++)
+            for (int i = 0; i < nDemNodes; i++)
             {
-                for (int j = 0; j < quantD[i].Length; j++)
+                for (int j = 0; j < nSupNodes; j++)
                 {
                     quantD[i][j] = mi.linkLosses.LinkCostOrLoss(i, j, quantS[i][j]);
                 }
@@ -174,9 +175,9 @@ namespace HydroSense
 
             /* Constrain Supply to Demand flows to be positive and not greater than
              * maximum quantity between Supply node j and Demand node i. */
-            for (int i = 0; i < quantS.Length; i++)
+            for (int i = 0; i < nDemNodes; i++)
             {
-                for (int j = 0; j < quantS[i].Length; j++)
+                for (int j = 0; j < nSupNodes; j++)
                 {
                     if (quantS[i][j] < mi.linkLosses.LowerLimit(i, j))
                     {
@@ -192,9 +193,9 @@ namespace HydroSense
             /* Determine the Quantity delivered to the Demand nodes by adjusting
              * for transportation losses from the supply nodes after constraining
              * supply flows */
-            for (int i = 0; i < quantS.Length; i++)
+            for (int i = 0; i < nDemNodes; i++)
             {
-                for (int j = 0; j < quantS[i].Length; j++)
+                for (int j = 0; j < nSupNodes; j++)
                 {
                     quantD[i][j] = mi.linkLosses.LinkCostOrLoss(i, j, quantS[i][j]);
                 }
@@ -202,14 +203,14 @@ namespace HydroSense
 
             /* Determine if Demand Node Constraints are violated
              * If they are, redistribute flows proportionally from Supplies */
-            for (int i = 0; i < quantD.Length; i++)
+            for (int i = 0; i < nDemNodes; i++)
             {
                 double totalD = Util.SumRow(quantD, i);
                 double limit = mi.demandNodes.UpperLimit(i);
                 if (totalD > limit)
                 {
                     double ratio = limit / totalD;
-                    for (int j = 0; j < quantD[i].Length; j++)
+                    for (int j = 0; j < nSupNodes; j++)
                     {
                         quantD[i][j] *= ratio;
                     }
@@ -217,9 +218,9 @@ namespace HydroSense
             }
 
             /* Adjust the Supply Quantities to match the adjusted Demand Quantities */
-            for (int i = 0; i < quantS.Length; i++)
+            for (int i = 0; i < nDemNodes; i++)
             {
-                for (int j = 0; j < quantS[i].Length; j++)
+                for (int j = 0; j < nSupNodes; j++)
                 {
                     quantS[i][j] = mi.linkLosses.LossInverse(i, j, quantD[i][j]);
                 }
@@ -227,14 +228,14 @@ namespace HydroSense
 
             /* Determine if Supply Node Constraints are violated
              * If they are, redistribute flow proportionally between Demand Nodes */
-            for (int i = 0; i < quantS[0].Length; i++)
+            for (int i = 0; i < nSupNodes; i++)
             {
                 double totalS = Util.SumColumn(quantS, i);
                 double limit = mi.supplyNodes.UpperLimit(i);
                 if (totalS > limit)
                 {
                     double ratio = 0.9999 * (limit / totalS);
-                    for (int j = 0; j < quantS.Length; j++)
+                    for (int j = 0; j < nDemNodes; j++)
                     {
                         quantS[j][i] *= ratio;
                     }
@@ -263,7 +264,7 @@ namespace HydroSense
             CheckConstraints(m, quantS, quantD);
 
             /* Calculate total cost of water for each supply node */
-            for (int i = 0; i < quantS[0].Length; i++)
+            for (int i = 0; i < nSupNodes; i++)
             {
                 rval -= m.supplyNodes.IntegratedCost(i, Util.SumColumn(quantS, i));
             }
@@ -271,10 +272,10 @@ namespace HydroSense
             /* Calculate total benefits of water for each demand node and the
              * transportation/link cost associated with delivering water from
              * Supply node j to Demand node i */
-            for (int i = 0; i < quantS.Length; i++)
+            for (int i = 0; i < nDemNodes; i++)
             {
                 double qd = 0.0;
-                for (int j = 0; j < quantS[i].Length; j++)
+                for (int j = 0; j < nSupNodes; j++)
                 {
                     qd += m.linkLosses.LinkCostOrLoss(i, j, quantS[i][j]);
                     rval -= m.linkCosts.IntegratedCost(i, j, quantS[i][j]);
@@ -285,69 +286,6 @@ namespace HydroSense
             return rval;
         }
 
-        private double[] LinearEquationSolver(int N, double[][] C, double[] y)
-        {
-            /* N is the number of demand and supply nodes
-             * y contains size values, and is the right hand vector
-             * for the linear system of equations [C]{x} = <y> */
-            double[] rval = new double[N];
-            double[] ys = new double[N];
-            int k = 0;
-            int MaxIt = 100;
-            double maxdel = 1.0;
-            double DelLimit = 0.0000001;
-            /*
-             *  Solve the system using an iterative approach by computing
-             *  Each x value as a 2X2 matrix solution
-             */
-            while (k < MaxIt && maxdel > DelLimit)
-            {
-                maxdel = 0.0;
-                for (int i = 0; i < N - 1; i++)
-                {
-                    double sum0 = y[i];
-                    double sum1 = y[i + 1];
-                    for (int j = 0; j < i; j++)
-                    {
-                        sum0 -= C[i][j] * rval[j];
-                        sum1 -= C[i + 1][j] * rval[j];
-                    }
-                    for (int j = i + 2; j < N; j++)
-                    {
-                        sum0 -= C[i][j] * rval[j];
-                        sum1 -= C[i + 1][j] * rval[j];
-                    }
-
-                    double num = C[i + 1][i + 1] * sum0 - C[i][i + 1] * sum1;
-                    double den = C[i + 1][i + 1] * C[i][i] - C[i][i + 1] * C[i + 1][i];
-                    double xnew = num / den;
-                    double delx = xnew - rval[i];
-                    rval[i] = xnew;
-                    if (Math.Abs(delx) > maxdel)
-                        maxdel = Math.Abs(delx);
-
-                    sum0 = y[N - 2];
-                    sum1 = y[N - 1];
-                    for (int j = 0; j < N - 2; j++)
-                    {
-                        sum0 -= C[N - 2][j] * rval[j];
-                        sum1 -= C[N - 1][j] * rval[j];
-                    }
-
-                    num = C[N - 1][N - 2] * sum0 - C[N - 2][N - 2] * sum1;
-                    den = C[N - 1][N - 2] * C[N - 2][N - 1] - C[N - 2][N - 2] * C[N - 1][N - 1];
-                    xnew = num / den;
-                    delx = xnew - rval[N - 1];
-                    rval[N - 1] = xnew;
-                    if (Math.Abs(delx) > maxdel)
-                        maxdel = Math.Abs(delx);
-                    if (maxdel < DelLimit)
-                        k = MaxIt;
-                    k += 1;
-                }
-            }
-            return rval;
-        }
     }
 }
 

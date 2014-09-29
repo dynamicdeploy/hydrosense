@@ -284,5 +284,69 @@ namespace HydroSense
             }
             return x;
         }
+
+        private static double[] LinearEquationSolver(int N, double[][] C, double[] y)
+        {
+            /* N is the number of demand and supply nodes
+             * y contains size values, and is the right hand vector
+             * for the linear system of equations [C]{x} = <y> */
+            double[] rval = new double[N];
+            double[] ys = new double[N];
+            int k = 0;
+            int MaxIt = 100;
+            double maxdel = 1.0;
+            double DelLimit = 0.0000001;
+            /*
+             *  Solve the system using an iterative approach by computing
+             *  Each x value as a 2X2 matrix solution
+             */
+            while (k < MaxIt && maxdel > DelLimit)
+            {
+                maxdel = 0.0;
+                for (int i = 0; i < N - 1; i++)
+                {
+                    double sum0 = y[i];
+                    double sum1 = y[i + 1];
+                    for (int j = 0; j < i; j++)
+                    {
+                        sum0 -= C[i][j] * rval[j];
+                        sum1 -= C[i + 1][j] * rval[j];
+                    }
+                    for (int j = i + 2; j < N; j++)
+                    {
+                        sum0 -= C[i][j] * rval[j];
+                        sum1 -= C[i + 1][j] * rval[j];
+                    }
+
+                    double num = C[i + 1][i + 1] * sum0 - C[i][i + 1] * sum1;
+                    double den = C[i + 1][i + 1] * C[i][i] - C[i][i + 1] * C[i + 1][i];
+                    double xnew = num / den;
+                    double delx = xnew - rval[i];
+                    rval[i] = xnew;
+                    if (Math.Abs(delx) > maxdel)
+                        maxdel = Math.Abs(delx);
+
+                    sum0 = y[N - 2];
+                    sum1 = y[N - 1];
+                    for (int j = 0; j < N - 2; j++)
+                    {
+                        sum0 -= C[N - 2][j] * rval[j];
+                        sum1 -= C[N - 1][j] * rval[j];
+                    }
+
+                    num = C[N - 1][N - 2] * sum0 - C[N - 2][N - 2] * sum1;
+                    den = C[N - 1][N - 2] * C[N - 2][N - 1] - C[N - 2][N - 2] * C[N - 1][N - 1];
+                    xnew = num / den;
+                    delx = xnew - rval[N - 1];
+                    rval[N - 1] = xnew;
+                    if (Math.Abs(delx) > maxdel)
+                        maxdel = Math.Abs(delx);
+                    if (maxdel < DelLimit)
+                        k = MaxIt;
+                    k += 1;
+                }
+            }
+            return rval;
+        }
     }
 }
