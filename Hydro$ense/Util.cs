@@ -18,12 +18,12 @@ namespace HydroSense
                 i++;
             }
 
-            // if first value in quantities is greater than quantity, use the
-            // first two quantities and costs. ASSUMES at least two values.
+            /* if first value in quantities is greater than quantity, use the
+             * first two quantities and costs. ASSUMES at least two values. */
             if (i == 0)
                 i++;
 
-            // don't divide by zero
+            /* don't divide by zero */
             if (quantities[i] == 0 && quantities[i - 1] == 0)
                 return 0.0;
 
@@ -142,16 +142,14 @@ namespace HydroSense
          * and first columns to be all 0.
          * 
          * Reference: Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and Clifford Stein. 
-         * Introduction To Algorithms Third Edition. The MIT Press, 2009.
-         */
+         * Introduction To Algorithms Third Edition. The MIT Press, 2009. */
         public static int[] LUPDecomposition(ref double[][] A)
         {
             int n = A.Length - 1;
-            /*
-            * pi represents the permutation matrix.  We implement it as an array
-            * whose value indicates which column the 1 would appear.  We use it to avoid 
-            * dividing by zero or small numbers.
-            * */
+
+            /* pi represents the permutation matrix.  We implement it as an array
+             * whose value indicates which column the 1 would appear.  We use it to avoid 
+             * dividing by zero or small numbers. */
             int[] pi = new int[n + 1];
             double p = 0;
             int kp = 0;
@@ -160,7 +158,7 @@ namespace HydroSense
             double aki = 0;
             double akpi = 0;
 
-            //Initialize the permutation matrix, will be the identity matrix
+            /* Initialize the permutation matrix, will be the identity matrix */
             for (int j = 0; j <= n; j++)
             {
                 pi[j] = j;
@@ -168,14 +166,12 @@ namespace HydroSense
 
             for (int k = 0; k <= n; k++)
             {
-                /*
-                * In finding the permutation matrix p that avoids dividing by zero
-                * we take a slightly different approach.  For numerical stability
-                * We find the element with the largest 
-                * absolute value of those in the current first column (column k).  If all elements in
-                * the current first column are zero then the matrix is singluar and throw an
-                * error.
-                * */
+                /* In finding the permutation matrix p that avoids dividing by zero
+                 * we take a slightly different approach.  For numerical stability
+                 * We find the element with the largest 
+                 * absolute value of those in the current first column (column k).  If all elements in
+                 * the current first column are zero then the matrix is singluar and throw an
+                 * error. */
                 p = 0;
                 for (int i = k; i <= n; i++)
                 {
@@ -189,18 +185,15 @@ namespace HydroSense
                 {
                     throw new Exception("singular matrix");
                 }
-                /*
-                * These lines update the pivot array (which represents the pivot matrix)
-                * by exchanging pi[k] and pi[kp].
-                * */
+
+                /* These lines update the pivot array (which represents the pivot matrix)
+                 * by exchanging pi[k] and pi[kp]. */
                 pik = pi[k];
                 pikp = pi[kp];
                 pi[k] = pikp;
                 pi[kp] = pik;
 
-                /*
-                * Exchange rows k and kpi as determined by the pivot
-                * */
+                /* Exchange rows k and kpi as determined by the pivot */
                 for (int i = 0; i <= n; i++)
                 {
                     aki = A[k][i];
@@ -209,9 +202,7 @@ namespace HydroSense
                     A[kp][i] = aki;
                 }
 
-                /*
-                    * Compute the Schur complement
-                    * */
+                /* Compute the Schur complement */
                 for (int i = k + 1; i <= n; i++)
                 {
                     A[i][k] = A[i][k] / A[k][k];
@@ -234,8 +225,7 @@ namespace HydroSense
          * The pi array represents the permutation matrix.
          * 
          * Reference: Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and Clifford Stein. 
-         * Introduction To Algorithms Third Edition. The MIT Press, 2009.
-         */
+         * Introduction To Algorithms Third Edition. The MIT Press, 2009. */
         public static double[] LUPSolve(ref double[][] A, double[] b)
         {
             int[] pi = LUPDecomposition(ref A);
@@ -247,19 +237,15 @@ namespace HydroSense
             double sumu = 0;
             double lij = 0;
 
-            /*
-            * Solve for y using formward substitution
-            * */
+            /* Solve for y using formward substitution */
             for (int i = 0; i <= n; i++)
             {
                 suml = 0;
                 for (int j = 0; j <= i - 1; j++)
                 {
-                    /*
-                    * Since we've taken L and U as a singular matrix as an input
-                    * the value for L at index i and j will be 1 when i equals j, not LU[i][j], since
-                    * the diagonal values are all 1 for L.
-                    * */
+                    /* Since we've taken L and U as a singular matrix as an input
+                     * the value for L at index i and j will be 1 when i equals j, not LU[i][j], since
+                     * the diagonal values are all 1 for L. */
                     if (i == j)
                     {
                         lij = 1;
@@ -272,7 +258,8 @@ namespace HydroSense
                 }
                 y[i] = b[pi[i]] - suml;
             }
-            //Solve for x by using back substitution
+
+            /* Solve for x by using back substitution */
             for (int i = n; i >= 0; i--)
             {
                 sumu = 0;
@@ -296,10 +283,9 @@ namespace HydroSense
             int MaxIt = 100;
             double maxdel = 1.0;
             double DelLimit = 0.0000001;
-            /*
-             *  Solve the system using an iterative approach by computing
-             *  Each x value as a 2X2 matrix solution
-             */
+            
+            /* Solve the system using an iterative approach by computing
+             * each x value as a 2x2 matrix solution */
             while (k < MaxIt && maxdel > DelLimit)
             {
                 maxdel = 0.0;
