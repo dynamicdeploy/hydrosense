@@ -116,12 +116,10 @@ namespace HydroSense
                 }
 
                 /*  Determine the change in quantity from Demand Node i to Supply Node j 
-                 *  by solving the linear set of equations [d2OFdQ2]{dQ} = {dOFdQ}
+                 *  by solving the linear set of equations [del2OFdelQ2]{dQ} = {dOFdQ}
                  *  using the LinearEquationSolver Routine */
                 double[] dOFdQ = Util.ToFlat(delOFdelQ);
-                //double[] dQ = LinearEquationSolver(numNodes, del2OFdelQ2, dOFdQ);
-                int[] p = Util.LUPDecomposition(ref del2OFdelQ2);
-                double[] dQ = Util.LUPSolve(del2OFdelQ2, p, dOFdQ);
+                double[] dQ = Util.LUPSolve(ref del2OFdelQ2, dOFdQ);
                 for (int i = 0; i < quantS.Length; i++)
                 {
                     for (int j = 0; j < quantS[i].Length; j++)

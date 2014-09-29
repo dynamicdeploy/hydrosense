@@ -227,10 +227,8 @@ namespace HydroSense
         /* taken from here:
          * http://www.rkinteractive.com/blogs/SoftwareDevelopment/post/2013/05/14/Algorithms-In-C-Solving-A-System-Of-Linear-Equations.aspx
          * 
-         * Given L,U,P and b solve for x.
-         * Input the L and U matrices as a single matrix LU.
-         * Return the solution as a double[].
-         * LU will be a n+1xm+1 matrix where the first row and columns are zero.
+         * Given A and b solve for x using LUP Decomposition.
+         * "A" will become LU, a n+1xm+1 matrix where the first row and columns are zero.
          * This is for ease of computation and consistency with Cormen et al.
          * pseudocode.
          * The pi array represents the permutation matrix.
@@ -238,9 +236,11 @@ namespace HydroSense
          * Reference: Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and Clifford Stein. 
          * Introduction To Algorithms Third Edition. The MIT Press, 2009.
          */
-        public static double[] LUPSolve(double[][] LU, int[] pi, double[] b)
+        public static double[] LUPSolve(ref double[][] A, double[] b)
         {
-            int n = LU.Length - 1;
+            int[] pi = LUPDecomposition(ref A);
+
+            int n = A.Length - 1;
             double[] x = new double[n + 1];
             double[] y = new double[n + 1];
             double suml = 0;
@@ -266,7 +266,7 @@ namespace HydroSense
                     }
                     else
                     {
-                        lij = LU[i][j];
+                        lij = A[i][j];
                     }
                     suml = suml + (lij * y[j]);
                 }
@@ -278,9 +278,9 @@ namespace HydroSense
                 sumu = 0;
                 for (int j = i + 1; j <= n; j++)
                 {
-                    sumu = sumu + (LU[i][j] * x[j]);
+                    sumu = sumu + (A[i][j] * x[j]);
                 }
-                x[i] = (y[i] - sumu) / LU[i][i];
+                x[i] = (y[i] - sumu) / A[i][i];
             }
             return x;
         }
