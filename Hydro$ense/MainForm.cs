@@ -14,7 +14,7 @@ namespace HydroSense
         int m_maxIter;
         double m_tolerance;
         double m_deltad;
-        TracySolver m_solver;
+        GradientDescentSolver m_solver;
 
         public MainForm()
         {
@@ -92,7 +92,7 @@ namespace HydroSense
                 return;
             }
 
-            m_solver = new TracySolver(mi);
+            m_solver = new GradientDescentSolver(mi);
             ModelOutput mOut = m_solver.Solve(m_maxIter, m_tolerance, m_deltad);
             mOut.ToExcel(m_outputExcel);
 
