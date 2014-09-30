@@ -6,7 +6,7 @@
            Name="$(var.ProductName) $(var.ProductVersion)" 
            Language="1033" 
            Version="$(var.ProductVersion)"
-           Manufacturer="Bureau of Reclamation / Idaho Water Resources Research Institute"
+           Manufacturer="Bureau of Reclamation"
            UpgradeCode="7598f632-5aca-41d6-b1b6-834db4ef0e04">
     
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />

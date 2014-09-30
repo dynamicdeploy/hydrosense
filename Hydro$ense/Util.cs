@@ -272,6 +272,7 @@ namespace HydroSense
             return x;
         }
 
+        [Obsolete("Not quite working correctly, use LUPSolve instead.", true)]
         private static double[] LinearEquationSolver(int N, double[][] C, double[] y)
         {
             /* N is the number of demand and supply nodes
