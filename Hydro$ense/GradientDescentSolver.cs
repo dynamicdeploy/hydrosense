@@ -5,14 +5,14 @@ using System.Text;
 
 namespace HydroSense
 {
-    class GradientDecentSolver
+    class GradientDescentSolver
     {
         public StringBuilder log { get; private set; }
         private int nDemNodes;
         private int nSupNodes;
         private ModelInput mi;
         
-        public GradientDecentSolver(ModelInput mi)
+        public GradientDescentSolver(ModelInput mi)
         {
             log = new StringBuilder();
             nDemNodes = mi.Q.Length;
