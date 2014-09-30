@@ -7,7 +7,7 @@ The Partial-Equilibrium solution is determined by maximizing the Consumer and Pr
 
 The optimal solution must be determined in an iterative fashion utilizing a search algorithm. The search algorithm used in the Hydro$ense solver employs a Gradient Descent method that utilizes numerical approximations of the first and second derivatives of the Objective Function with respect to the decision variables. The solution proceeds by developing an initial guess for the optimal decision variables which is used to estimate the first and second derivatives of the Objective Function with respect to the array of decision variables. The decision variables are then updated by solving the linear system of equations as:
 
->    **{dv^i} = {dv^(i-1)} - [(Δ^2 OF)/Δdv^2]^(-1) {ΔOF/Δdv}**
+>    **{dv^i} = {dv^(i-1)} - [(Δ^2 OF)/Δdv^(2)]^(-1) {ΔOF/Δdv}**
 
 Where:
 
@@ -21,7 +21,7 @@ At the end of each iteration, the updated optimal solution is checked to make su
 
 To aid in converging towards a stable solution, an adjustment to the diagonal values of the matrix representing the second derivatives of the Objective Function with respect to the decision variables is performed utilizing a Marquardt adjustment, defined as:
 
->    **e^((i-500) x Δdv)**
+>    **e^([i-500] x Δdv)**
 
 Where:
 
