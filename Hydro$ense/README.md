@@ -21,7 +21,7 @@ At the end of each iteration, the updated optimal solution is checked to make su
 
 To aid in converging towards a stable solution, an adjustment to the diagonal values of the matrix representing the second derivatives of the Objective Function with respect to the decision variables is performed utilizing a Marquardt adjustment, defined as:
 
->    **e^({i-500) x Δdv)**
+>    **e^((i-500) x Δdv)**
 
 Where:
 
