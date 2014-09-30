@@ -107,7 +107,7 @@ namespace HydroSense
                         delOFdelQ2[i][j] = (OF2 - OF) / deltad;
                         del2OFdelQ2[i * nSupNodes + j][i * nSupNodes + j] = (delOFdelQ2[i][j] - delOFdelQ[i][j]) / deltad;
 
-                        /* use the Marquard Algorithm to condition the matrix */
+                        /* use the Marquardt Algorithm to condition the matrix */
                         del2OFdelQ2[i * nSupNodes + j][i * nSupNodes + j] += Math.Exp((iter - 500) * deltad);
                         delQ2[i][j] = quantS[i][j];
                         delQ1[i][j] = quantS[i][j];
