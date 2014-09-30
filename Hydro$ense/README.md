@@ -1,7 +1,7 @@
 # Hydro$ense
 September 30, 2014
 
-Hydro$ense is a Hydro-Economic Net Benefit Maximizer. Provided supply and demand for water with the associated economic supply-cost and demand-price, this program solves for the economic partial-equilibrium solution by maximimizing the Consumer and Producer Surplus.
+Hydro$ense is a Hydro-Economic Net Benefit Maximizer. Provided supply and demand for water with the associated economic supply-cost and demand-price, this program solves for the economic partial-equilibrium solution by maximizing the Consumer and Producer Surplus.
 
 The Partial-Equilibrium solution is determined by maximizing the Consumer and Producer Surplus, referred to as the Objective Function, subject to the physical and water management constraints for the Hydro-Economic problem being analyzed. The Objective Function can also be defined as the sum of all the benefits accrued through water use by all of the demanders, minus the costs of providing water from the suppliers and the costs of transporting the water from the suppliers to demanders. The physical constraints include limits on the water available as a supply, and the relationship that defines the loss of water as it is transported from water supplies to water demands, often referred to as the transportation losses. The water management constraints include the limits on the amount of water that demanders are allowed to use as defined by the water rights administration for the problem being analyzed. The optimal (maximum) solution is then determined as the point where the derivative of the Objective Function with respect to the amounts of water provided between the suppliers and demanders (referred to as the decision variables) is equal to zero, as long as this solution is within the physical and management constraints.
 
@@ -68,3 +68,7 @@ An excel file, either *.xls* or *.xlsx*, the following worksheets will be create
 * Setup code tests, using a testing framework like [NUnit](http://www.nunit.org/)
 * Test solver against additional problems with known solutions
 * Improve solution convergence for a wider range of initial guesses
+
+
+## Acknowledgments
+This project is based on methodologies developed by the Bureau of Reclamation and University of Idaho - Idaho Water Resources Research Institute, and funded by the Reclamation Research and Development Group.
