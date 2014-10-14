@@ -66,7 +66,13 @@
     <GetAssemblyIdentity AssemblyFiles="$(AssemblyLocation)">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
     </GetAssemblyIdentity>
-    <Copy SourceFiles=".\bin\$(Configuration)\$(OutputName).msi" DestinationFiles=".\bin\$(Configuration)\$(OutputName)_%(AssemblyVersion.Version)_$(bit).msi" />
+    <PropertyGroup>
+      <version>%(AssemblyVersion.Version)</version>
+    </PropertyGroup>
+    <PropertyGroup>
+      <version>$(version.Substring(0,5))</version>
+    </PropertyGroup>
+    <Copy SourceFiles=".\bin\$(Configuration)\$(OutputName).msi" DestinationFiles=".\bin\$(Configuration)\$(OutputName)_$(version)_$(bit).msi" />
     <Delete Files=".\bin\$(Configuration)\$(OutputName).msi" />
   </Target>
 </Project>
