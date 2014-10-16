@@ -2,14 +2,15 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <?define ProductName="$(fileVersion.ProductName($(var.Hydro$ense.TargetPath)))"?>
   <?define ProductVersion="$(fileVersion.ProductVersion($(var.Hydro$ense.TargetPath)))"?>
-	<Product Id="*" 
+  <?define ProductGUID="43383D9A-6D70-4687-B468-C1E379790794"?>
+	<Product Id="$(var.ProductGUID)" 
            Name="$(var.ProductName) $(var.ProductVersion)" 
            Language="1033" 
            Version="$(var.ProductVersion)"
            Manufacturer="Bureau of Reclamation"
-           UpgradeCode="7598f632-5aca-41d6-b1b6-834db4ef0e04">
+           UpgradeCode="$(var.ProductGUID)">
     
-		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+		<Package Id="$(var.ProductGUID)" InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <!--Ensure that .net 3.5 is installed-->
     <PropertyRef Id="NETFRAMEWORK35"/>
