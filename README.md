@@ -43,7 +43,7 @@ An excel file, either *.xls* or *.xlsx*, containing the following worksheets and
 * **Transportation Costs** - The transportation costs associated with moving water from a supply node to a demand node. Entered as an array of flows from each supply node and an array of marginal costs to each demand node.
 * **Initial Guess** - A matrix guess of the optimal supply to each demand node. Rows representing demand nodes and columns representing supply nodes. If a supply node cannot deliver water to a demand node the guess should be zero.
 
-An example problem (ExampleProblem.xlsx) is provided in the software installation directory.
+An example problem (ExampleInput.xlsx) is provided in the software installation directory.
 
 
 ### Model parameters

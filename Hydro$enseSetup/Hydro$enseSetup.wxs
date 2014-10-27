@@ -50,23 +50,49 @@
 
       <!--Start menu folder-->
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="ProgramMenuSubfolder" Name="Hydro$ense"/>
+        <Directory Id="ProgramMenuSubfolder" Name="$(var.ProductName)">
+          <Directory Id="ProgramMenuInstallFolder" Name="$(var.ProductName) $(var.ProductVersion)">
+            <Directory Id="ProgramMenuInstallDocFolder" Name="Documentation"/>
+            <Directory Id="ProgramMenuInstallExampleFolder" Name="Examples"/>
+          </Directory>
+        </Directory>
       </Directory>
 
       <!--Desktop folder-->
       <Directory Id="DesktopFolder"/>
     </Directory>
 
-    <!--Start menu shortcut-->
-    <DirectoryRef Id="ProgramMenuSubfolder">
-      <Component Id="HydroSenseShortcut">
-        <Shortcut Id="StartMenuShortcut"
+    <!--Start menu program shortcut-->
+    <DirectoryRef Id="ProgramMenuInstallFolder">
+      <Component Id="HydroSenseStartMenuShortcuts">
+        <CreateFolder Directory="ProgramMenuSubfolder"/>
+        <CreateFolder Directory="ProgramMenuInstallFolder"/>
+        <CreateFolder Directory="ProgramMenuInstallDocFolder"/>
+        <CreateFolder Directory="ProgramMenuInstallExampleFolder"/>
+        <Shortcut Id="ProgramShortcut"
                   Name="$(var.ProductName) $(var.ProductVersion)"
-                  Directory="ProgramMenuSubfolder"
                   Description="Hydro-Economic Net Benefit Maximizer"
                   Target="[FilesDir]$(var.Hydro$ense.TargetFileName)"
                   WorkingDirectory="FilesDir"
                   Icon="Icon">
+        </Shortcut>
+        <Shortcut Id="HowToShortcut"
+                  Name="Hydro$ense How To Manual.pdf"
+                  Directory="ProgramMenuInstallDocFolder"
+                  Target="[FilesDir]Hydro$ense How To Manual.pdf"
+                  WorkingDirectory="FilesDir">
+        </Shortcut>
+        <Shortcut Id="ReadMeShortcut"
+                  Name="README.rtf"
+                  Directory="ProgramMenuInstallDocFolder"
+                  Target="[FilesDir]README.rtf"
+                  WorkingDirectory="FilesDir">
+        </Shortcut>
+        <Shortcut Id="ExampleSpreadsheet"
+                  Name="ExampleInput.xlsx"
+                  Directory="ProgramMenuInstallExampleFolder"
+                  Target="[FilesDir]ExampleInput.xlsx"
+                  WorkingDirectory="FilesDir">
         </Shortcut>
         <RegistryValue Root="HKCU"
                        Key="Software\Hydro$sense\$(var.ProductName) $(var.ProductVersion)"
@@ -75,7 +101,10 @@
                        Value="1"
                        KeyPath="yes">
         </RegistryValue>
-        <RemoveFolder Id="HydroSenseShortcut" On="uninstall"/>
+        <RemoveFolder Id="RemoveProgramMenuSubfolder" Directory="ProgramMenuSubfolder" On="uninstall"/>
+        <RemoveFolder Id="RemoveProgramMenuInstallFolder" Directory="ProgramMenuInstallFolder" On="uninstall"/>
+        <RemoveFolder Id="RemoveProgramMenuInstallDocFolder" Directory="ProgramMenuInstallDocFolder" On="uninstall"/>
+        <RemoveFolder Id="RemoveProgramMenuInstallExampleFolder" Directory="ProgramMenuInstallExampleFolder" On="uninstall"/>
       </Component>
     </DirectoryRef>
 
@@ -115,7 +144,10 @@
         <File Source="$(var.Hydro$ense.TargetDir)README.rtf"/>
       </Component>
       <Component Id="InputExample">
-        <File Source="$(var.SolutionDir)ExampleProblem.xlsx"/>
+        <File Source="$(var.SolutionDir)ExampleInput.xlsx"/>
+      </Component>
+      <Component Id="HowTo">
+        <File Source="$(var.SolutionDir)Documentation/Hydro$ense How To Manual.pdf"/>
       </Component>
       <Component Id="SharpZipLib">
         <File Source="$(var.Hydro$ense.TargetDir)ICSharpCode.SharpZipLib.dll"/>
@@ -147,7 +179,7 @@
     <!--Add all components to Hydro$ense-->
     <Feature Id="HydroSenseFeature" Title="HydroSenseSetup" Level="1">
       <ComponentGroupRef Id="HydroSenseComponents" />
-      <ComponentRef Id="HydroSenseShortcut"/>
+      <ComponentRef Id="HydroSenseStartMenuShortcuts"/>
       <ComponentRef Id="HydroSenseShortcutDesktop"/>
     </Feature>
     

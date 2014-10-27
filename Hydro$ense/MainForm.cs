@@ -19,6 +19,7 @@ namespace HydroSense
         public MainForm()
         {
             InitializeComponent();
+            Text += " " + Application.ProductVersion;
             m_maxIter = Convert.ToInt32(textBoxMaxIter.Text);
             m_tolerance = Convert.ToDouble(textBoxTolerance.Text);
             m_deltad = Convert.ToDouble(textBoxDeltaD.Text);
@@ -182,6 +183,24 @@ namespace HydroSense
                 buttonQuit.Visible = false;
                 buttonRun.Visible = false;
             }
+        }
+
+        private void linkLabelHowToManual_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            string file = "Hydro$ense How To Manual.pdf";
+            if (File.Exists(file))
+                Process.Start(file);
+            else
+                toolStripStatusLabel.Text = "Unable to find: " + file;
+        }
+
+        private void linkLabelReadme_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            string file = "README.rtf";
+            if (File.Exists(file))
+                Process.Start(file);
+            else
+                toolStripStatusLabel.Text = "Unable to find: " + file;
         }
         
     }

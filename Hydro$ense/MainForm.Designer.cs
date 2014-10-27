@@ -1,4 +1,5 @@
-﻿namespace HydroSense
+﻿using System.Windows.Forms;
+namespace HydroSense
 {
     partial class MainForm
     {
@@ -56,8 +57,11 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxDeltaD = new System.Windows.Forms.TextBox();
             this.buttonDefault = new System.Windows.Forms.Button();
-            this.Readme = new System.Windows.Forms.TabPage();
+            this.Help = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
+            this.linkLabelHowToManual = new System.Windows.Forms.LinkLabel();
             this.richTextBoxReadme = new System.Windows.Forms.RichTextBox();
+            this.linkLabelReadme = new System.Windows.Forms.LinkLabel();
             this.tableLayoutPanel1.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -65,7 +69,8 @@
             this.Run.SuspendLayout();
             this.Advanced.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
-            this.Readme.SuspendLayout();
+            this.Help.SuspendLayout();
+            this.tableLayoutPanel4.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -287,7 +292,7 @@
             this.tableLayoutPanel2.SetColumnSpan(this.tabControl1, 3);
             this.tabControl1.Controls.Add(this.Run);
             this.tabControl1.Controls.Add(this.Advanced);
-            this.tabControl1.Controls.Add(this.Readme);
+            this.tabControl1.Controls.Add(this.Help);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(3, 3);
             this.tabControl1.Name = "tabControl1";
@@ -368,25 +373,73 @@
             this.buttonDefault.UseVisualStyleBackColor = true;
             this.buttonDefault.Click += new System.EventHandler(this.buttonDefault_Click);
             // 
-            // Readme
+            // Help
             // 
-            this.Readme.Controls.Add(this.richTextBoxReadme);
-            this.Readme.Location = new System.Drawing.Point(4, 22);
-            this.Readme.Name = "Readme";
-            this.Readme.Size = new System.Drawing.Size(570, 268);
-            this.Readme.TabIndex = 2;
-            this.Readme.Text = "Readme";
-            this.Readme.UseVisualStyleBackColor = true;
+            this.Help.Controls.Add(this.tableLayoutPanel4);
+            this.Help.Location = new System.Drawing.Point(4, 22);
+            this.Help.Name = "Help";
+            this.Help.Padding = new System.Windows.Forms.Padding(3);
+            this.Help.Size = new System.Drawing.Size(570, 268);
+            this.Help.TabIndex = 3;
+            this.Help.Text = "Help";
+            this.Help.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel4
+            // 
+            this.tableLayoutPanel4.ColumnCount = 2;
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 150F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel4.Controls.Add(this.richTextBoxReadme, 1, 0);
+            this.tableLayoutPanel4.Controls.Add(this.linkLabelHowToManual, 0, 2);
+            this.tableLayoutPanel4.Controls.Add(this.linkLabelReadme, 0, 1);
+            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanel4.Name = "tableLayoutPanel4";
+            this.tableLayoutPanel4.Padding = new System.Windows.Forms.Padding(6);
+            this.tableLayoutPanel4.RowCount = 4;
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(564, 262);
+            this.tableLayoutPanel4.TabIndex = 0;
+            // 
+            // linkLabelHowToManual
+            // 
+            this.linkLabelHowToManual.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.linkLabelHowToManual.AutoSize = true;
+            this.linkLabelHowToManual.Location = new System.Drawing.Point(9, 49);
+            this.linkLabelHowToManual.Name = "linkLabelHowToManual";
+            this.linkLabelHowToManual.Size = new System.Drawing.Size(112, 13);
+            this.linkLabelHowToManual.TabIndex = 1;
+            this.linkLabelHowToManual.TabStop = true;
+            this.linkLabelHowToManual.Text = "Open How To Manual";
+            this.linkLabelHowToManual.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHowToManual_LinkClicked);
             // 
             // richTextBoxReadme
             // 
             this.richTextBoxReadme.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.richTextBoxReadme.Location = new System.Drawing.Point(0, 0);
+            this.richTextBoxReadme.Location = new System.Drawing.Point(159, 9);
             this.richTextBoxReadme.Name = "richTextBoxReadme";
-            this.richTextBoxReadme.ReadOnly = true;
-            this.richTextBoxReadme.Size = new System.Drawing.Size(570, 268);
-            this.richTextBoxReadme.TabIndex = 0;
+            this.tableLayoutPanel4.SetRowSpan(this.richTextBoxReadme, 4);
+            this.richTextBoxReadme.Size = new System.Drawing.Size(396, 244);
+            this.richTextBoxReadme.TabIndex = 2;
             this.richTextBoxReadme.Text = "";
+            // 
+            // linkLabelReadme
+            // 
+            this.linkLabelReadme.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.linkLabelReadme.AutoSize = true;
+            this.linkLabelReadme.Location = new System.Drawing.Point(9, 29);
+            this.linkLabelReadme.Name = "linkLabelReadme";
+            this.linkLabelReadme.Size = new System.Drawing.Size(82, 13);
+            this.linkLabelReadme.TabIndex = 3;
+            this.linkLabelReadme.TabStop = true;
+            this.linkLabelReadme.Text = "Open README";
+            this.linkLabelReadme.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelReadme_LinkClicked);
             // 
             // MainForm
             // 
@@ -410,7 +463,9 @@
             this.Advanced.ResumeLayout(false);
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel3.PerformLayout();
-            this.Readme.ResumeLayout(false);
+            this.Help.ResumeLayout(false);
+            this.tableLayoutPanel4.ResumeLayout(false);
+            this.tableLayoutPanel4.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -445,8 +500,11 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBoxDeltaD;
         private System.Windows.Forms.Button buttonDefault;
-        private System.Windows.Forms.TabPage Readme;
-        private System.Windows.Forms.RichTextBox richTextBoxReadme;
+        private TabPage Help;
+        private TableLayoutPanel tableLayoutPanel4;
+        private LinkLabel linkLabelHowToManual;
+        private RichTextBox richTextBoxReadme;
+        private LinkLabel linkLabelReadme;
 
     }
 }
