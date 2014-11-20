@@ -72,3 +72,13 @@ An excel file, either *.xls* or *.xlsx*, the following worksheets will be create
 
 ## Acknowledgments
 This project is based on methodologies developed by the Bureau of Reclamation and University of Idaho - Idaho Water Resources Research Institute, and funded by the Reclamation Research and Development Group.
+
+## Additional Documentation
+* [An Approach to Hydro-Economic Modeling Using Parital Equilibrium Optimization](http://digital.lib.uidaho.edu/cdm/singleitem/collection/idahowater/id/545/rec/3)
+* [Modeling Spatial Water Allocation and Hydrologic Externalities in the Boise Valley](http://www.usbr.gov/pn/programs/srao_misc/boisevalley/index.html)
+* [Hydro-Economic Modeling of Boise Basin Water Management Responses to Climate Change](http://digital.lib.uidaho.edu/cdm/singleitem/collection/idahowater/id/542/rec/2)
+* [Henrys Fork Hydro-Economic Modeling](http://digital.lib.uidaho.edu/cdm/singleitem/collection/idahowater/id/544/rec/1)
+
+
+
+
